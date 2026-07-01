@@ -1,0 +1,71 @@
+fastapi==0.115.0
+uvicorn[standard]==0.30.6
+python-multipart==0.0.9
+websockets==14.0
+
+# Database
+sqlalchemy[asyncio]==2.0.35
+asyncpg==0.29.0
+alembic==1.13.3
+
+# Cache
+redis[hiredis]==5.0.8
+
+# Config
+pydantic==2.9.2
+pydantic-settings==2.5.2
+python-dotenv==1.1.0
+
+# AI / LLM Framework
+langchain==0.3.7
+langchain-community==0.3.7
+langchain-ollama==0.2.1
+langgraph==0.2.50
+
+# STT
+faster-whisper==1.0.3
+
+# TTS
+kokoro==0.9.2
+soundfile==0.12.1
+numpy==1.26.4
+
+# HuggingFace
+transformers==4.44.2
+sentence-transformers==3.1.1
+torch==2.4.1
+accelerate==0.33.0
+tokenizers==0.19.1
+
+# Vector DB
+qdrant-client[fastembed]==1.11.3
+
+# MCP
+fastmcp==2.3.4
+
+# Audio
+pyaudio==0.2.14
+webrtcvad==2.0.10
+pydub==0.25.1
+
+# HTTP
+httpx[http2]==0.28.1
+tenacity==8.4.2
+
+# Document Parsing
+pypdf==4.3.1
+python-docx==1.1.2
+markdown-it-py==3.0.0
+unstructured==0.15.14
+
+# Logging
+structlog==24.4.0
+prometheus-fastapi-instrumentator==7.0.0
+
+# Security
+python-jose[cryptography]==3.3.0
+passlib==1.7.4
+
+# Utilities
+anyio>=4.5.0
+aiofiles==24.1.0

@@ -1,0 +1,111 @@
+[tool.poetry]
+name = "ambrane-voice-support"
+version = "1.0.0"
+description = "Ambrane AI Voice Customer Support Platform"
+authors = ["Ambrane Team"]
+python = "^3.11"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+
+# ── Web Framework ──────────────────────────────────────────────────────────────
+fastapi = "^0.115.0"
+uvicorn = {extras = ["standard"], version = "^0.30.0"}
+python-multipart = "^0.0.9"
+websockets = "^12.0"
+
+# ── Database ───────────────────────────────────────────────────────────────────
+sqlalchemy = {extras = ["asyncio"], version = "^2.0.0"}
+asyncpg = "^0.29.0"
+alembic = "^1.13.0"
+
+# ── Cache ──────────────────────────────────────────────────────────────────────
+redis = {extras = ["hiredis"], version = "^5.0.0"}
+
+# ── Configuration ──────────────────────────────────────────────────────────────
+pydantic = "^2.7.0"
+pydantic-settings = "^2.3.0"
+python-dotenv = "^1.0.0"
+
+# ── AI / LLM ──────────────────────────────────────────────────────────────────
+langchain = "^0.3.0"
+langchain-community = "^0.3.0"
+langchain-ollama = "^0.2.0"
+langgraph = "^0.2.0"
+
+# ── STT ────────────────────────────────────────────────────────────────────────
+faster-whisper = "^1.0.3"
+
+# ── TTS ────────────────────────────────────────────────────────────────────────
+kokoro = "^0.9.2"
+soundfile = "^0.12.1"
+numpy = "^1.26.0"
+
+# ── HuggingFace Models ─────────────────────────────────────────────────────────
+transformers = "^4.44.0"
+sentence-transformers = "^3.1.0"
+torch = {version = "^2.4.0", optional = true}
+accelerate = "^0.33.0"
+tokenizers = "^0.20.0"
+
+# ── Vector DB ──────────────────────────────────────────────────────────────────
+qdrant-client = {extras = ["fastembed"], version = "^1.11.0"}
+
+# ── MCP (Tool Calling) ─────────────────────────────────────────────────────────
+fastmcp = "^2.3.0"
+
+# ── Audio Processing ───────────────────────────────────────────────────────────
+pyaudio = "^0.2.14"
+webrtcvad = "^2.0.10"
+pydub = "^0.25.1"
+
+# ── HTTP Client ────────────────────────────────────────────────────────────────
+httpx = {extras = ["http2"], version = "^0.27.0"}
+tenacity = "^8.4.0"
+
+# ── Document Parsing ──────────────────────────────────────────────────────────
+pypdf = "^4.3.0"
+python-docx = "^1.1.0"
+markdown-it-py = "^3.0.0"
+unstructured = "^0.15.0"
+
+# ── Logging & Monitoring ──────────────────────────────────────────────────────
+structlog = "^24.4.0"
+prometheus-fastapi-instrumentator = "^7.0.0"
+
+# ── Utilities ──────────────────────────────────────────────────────────────────
+python-jose = {extras = ["cryptography"], version = "^3.3.0"}
+passlib = "^1.7.4"
+anyio = "^4.4.0"
+aiofiles = "^24.1.0"
+
+[tool.poetry.dev-dependencies]
+pytest = "^8.3.0"
+pytest-asyncio = "^0.23.0"
+pytest-cov = "^5.0.0"
+httpx = "^0.27.0"
+black = "^24.8.0"
+ruff = "^0.6.0"
+mypy = "^1.11.0"
+
+[tool.black]
+line-length = 100
+target-version = ["py311"]
+
+[tool.ruff]
+line-length = 100
+select = ["E", "F", "I", "N", "W"]
+ignore = ["E501"]
+
+[tool.mypy]
+python_version = "3.11"
+strict = false
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
