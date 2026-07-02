@@ -76,6 +76,53 @@ async def call_websocket(
     # Save call to DB (including zoho_ticket_id)
     await _create_call_record(call_id, channel, zoho_ticket_id)
 
+    # Send initial greeting immediately upon call connection
+    try:
+        # Run receptionist agent directly to get greeting without executing the whole graph
+        from app.agents.receptionist.agent import receptionist_agent
+        result = await receptionist_agent(state)
+        
+        # Get the greeting message
+        last_ai_msg = result.get("messages", [])[0] if result.get("messages") else None
+        
+        if last_ai_msg:
+            response_text = last_ai_msg.content
+            
+            # Send greeting text event to websocket
+            await websocket.send_text(json.dumps({
+                "type": "agent_response",
+                "text": response_text,
+                "agent": "receptionist",
+                "intent": None,
+                "citations": [],
+            }))
+            
+            # Save to Redis transcript
+            await redis_manager.append_transcript(call_id, {
+                "speaker": "receptionist",
+                "text": response_text,
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+            })
+            
+            # Publish to agent dashboard
+            await redis_manager.publish(f"transcript.{call_id}", {
+                "type": "transcript_chunk",
+                "text": response_text,
+                "speaker": "receptionist",
+            })
+            
+            # Synthesize and send greeting audio
+            from app.core.tts.factory import TTSFactory
+            tts = TTSFactory.get_provider()
+            async for audio_chunk in tts.synthesize_stream(response_text):
+                await websocket.send_bytes(audio_chunk)
+                
+        # Merge result into state and save to Redis so future messages append to this state
+        state.update(result)
+        await redis_manager.save_call_state(call_id, state)
+    except Exception as e:
+        logger.error("initial_greeting_error", call_id=call_id, error=str(e))
+
     # Audio queue: WebSocket → STT
     audio_queue: asyncio.Queue[bytes] = asyncio.Queue()
 
@@ -190,6 +237,22 @@ async def _run_agent_and_respond(
                 "timestamp": datetime.now(timezone.utc).isoformat(),
             })
 
+            # Publish specifically for agent live dashboard with transcript_chunk type
+            await redis_manager.publish(f"transcript.{call_id}", {
+                "type": "transcript_chunk",
+                "text": response_text,
+                "speaker": result.get("active_agent", "ai"),
+            })
+
+            # Stream TTS response back to customer client as binary audio chunks
+            try:
+                from app.core.tts.factory import TTSFactory
+                tts = TTSFactory.get_provider()
+                async for audio_chunk in tts.synthesize_stream(response_text):
+                    await websocket.send_bytes(audio_chunk)
+            except Exception as tts_err:
+                logger.error("tts_synthesis_error", call_id=call_id, error=str(tts_err))
+
         # Send intent detected event
         if result.get("intent"):
             await websocket.send_text(json.dumps({
@@ -240,10 +303,11 @@ async def agent_websocket(websocket: WebSocket, agent_id: str):
     await websocket.accept()
     logger.info("agent_ws_connected", agent_id=agent_id)
 
-    # Subscribe to agent's assist channel and escalation channel
+    # Subscribe to agent's assist channel, escalation channel, and live transcript updates
     pubsub = await redis_manager.subscribe(
         f"assist.{agent_id}",
         "human.escalation",
+        f"transcript.{agent_id}",
     )
 
     try:

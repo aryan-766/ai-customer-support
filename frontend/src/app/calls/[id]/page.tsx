@@ -37,7 +37,29 @@ export default function LiveCallView({ params }: { params: Promise<{ id: string 
   }, [messages]);
 
   useEffect(() => {
-    // Connect to the human agent WebSocket for this specific call/agent
+    // 1. Fetch transcript history to display the greeting and previous conversation immediately
+    async function fetchHistory() {
+      try {
+        const res = await fetch(`http://localhost:8000/api/v1/calls/${callId}/transcript`);
+        if (res.ok) {
+          const data = await res.json();
+          if (data.transcript) {
+            setMessages(data.transcript.map((t: any) => ({
+              id: Math.random().toString(),
+              speaker: t.speaker === "receptionist" ? "ai" : t.speaker === "ai" ? "ai" : "customer",
+              text: t.text,
+              timestamp: new Date(t.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+            })));
+          }
+        }
+      } catch (err) {
+        console.error("Failed to fetch transcript history:", err);
+      }
+    }
+
+    fetchHistory();
+
+    // 2. Connect to the human agent WebSocket for this specific call/agent
     // In a real app, agent_id would come from auth context. Using callId as mock agent_id for demo.
     const ws = new WebSocket(`ws://localhost:8000/ws/agent/${callId}`);
     wsRef.current = ws;
@@ -51,7 +73,7 @@ export default function LiveCallView({ params }: { params: Promise<{ id: string 
         if (data.type === "transcript_chunk") {
           setMessages(prev => [...prev, {
             id: Date.now().toString() + Math.random(),
-            speaker: data.speaker,
+            speaker: data.speaker === "receptionist" ? "ai" : data.speaker === "ai" ? "ai" : "customer",
             text: data.text,
             timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
           }]);

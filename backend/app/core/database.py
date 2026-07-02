@@ -8,7 +8,7 @@ from app.config import settings
 
 
 class Base(DeclarativeBase):
-    pass
+    __allow_unmapped__ = True
 
 
 # Async engine with connection pooling

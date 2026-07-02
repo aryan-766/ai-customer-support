@@ -42,9 +42,11 @@ class ZohoDesk:
         ai_summary: str = "",
     ) -> str | None:
         """Create a Zoho Desk ticket. Returns ticket ID."""
-        if not settings.ZOHO_CLIENT_ID:
-            logger.warning("zoho_not_configured")
-            return None
+        if not settings.ZOHO_CLIENT_ID or "your_zoho" in settings.ZOHO_CLIENT_ID.lower():
+            import uuid
+            mock_id = f"MOCK-ZOHO-TKT-{uuid.uuid4().hex[:6].upper()}"
+            logger.warning("zoho_not_configured_using_mock", mock_id=mock_id)
+            return mock_id
 
         try:
             token = await self._get_token()
@@ -73,7 +75,7 @@ class ZohoDesk:
 
     async def search_tickets(self, customer_email: str) -> list[dict]:
         """Search tickets by customer email."""
-        if not settings.ZOHO_CLIENT_ID:
+        if not settings.ZOHO_CLIENT_ID or "your_zoho" in settings.ZOHO_CLIENT_ID.lower():
             return []
         try:
             token = await self._get_token()
@@ -97,7 +99,7 @@ class ZohoDesk:
         Search contacts in Zoho Desk by Customer ID/Email/Order/Phone/etc.
         If Zoho Desk client is not configured, returns mock contact details.
         """
-        if not settings.ZOHO_CLIENT_ID:
+        if not settings.ZOHO_CLIENT_ID or "your_zoho" in settings.ZOHO_CLIENT_ID.lower():
             clean_val = search_value.upper().strip()
             if any(x in clean_val for x in ["CUST-10001", "ORD-12345", "AMB-12345", "INV-98765", "DEMO"]):
                 return {
@@ -154,7 +156,7 @@ class ZohoDesk:
 
     async def update_ticket_contact(self, ticket_id: str, email: str, subject_update: str) -> bool:
         """Update an existing ticket's subject/email/contact info in Zoho Desk."""
-        if not settings.ZOHO_CLIENT_ID:
+        if not settings.ZOHO_CLIENT_ID or "your_zoho" in settings.ZOHO_CLIENT_ID.lower():
             logger.warning("zoho_not_configured_for_update", ticket_id=ticket_id)
             return True
 
@@ -180,7 +182,7 @@ class ZohoDesk:
 
     async def update_ticket_summary(self, ticket_id: str, description: str, status: str = "Open") -> bool:
         """Update Zoho Desk ticket description and status at call end."""
-        if not settings.ZOHO_CLIENT_ID:
+        if not settings.ZOHO_CLIENT_ID or "your_zoho" in settings.ZOHO_CLIENT_ID.lower():
             logger.warning("zoho_not_configured_for_summary_update", ticket_id=ticket_id)
             return True
 

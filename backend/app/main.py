@@ -35,6 +35,8 @@ async def lifespan(app: FastAPI):
     await registry.initialize()
     logger.info("models_loaded")
 
+
+
     # Setup Qdrant collection if missing
     from app.core.rag.retriever import setup_qdrant_collection
     await setup_qdrant_collection()

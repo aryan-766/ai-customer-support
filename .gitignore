@@ -89,3 +89,8 @@ Thumbs.db
 *.swo
 *.sublime-project
 *.sublime-workspace
+
+# Large ML models cache directory
+**/.models/
+**/models_cache/
+**/test_ws_greeting.py

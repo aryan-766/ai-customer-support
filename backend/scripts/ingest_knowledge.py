@@ -21,7 +21,9 @@ from qdrant_client.models import PointStruct, VectorParams, Distance
 
 logger = structlog.get_logger(__name__)
 
-KNOWLEDGE_DIR = Path(__file__).parent.parent.parent / "knowledge"
+KNOWLEDGE_DIR = Path("/app/knowledge")
+if not KNOWLEDGE_DIR.exists():
+    KNOWLEDGE_DIR = Path(__file__).parent.parent.parent / "knowledge"
 VECTOR_SIZE = 384   # bge-small-en-v1.5
 
 # Category mapping: folder name → Qdrant category tag

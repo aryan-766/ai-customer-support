@@ -1,32 +1,49 @@
 # Ambrane Warranty Policy
 
 ## Standard Warranty Coverage
+Ambrane provides a standard **365-day (1-year) warranty** from the date of purchase for all products against manufacturing-related defects.
 
-Ambrane provides a **1-year warranty** from the date of purchase for all products.
+### 🌐 Official Website Bonus
+Customers who purchase products directly from the official website **ambraneindia.com** receive an **extra 30-day extended warranty** (total of 395 days) from the date of purchase.
 
-### What is Covered
-- Manufacturing defects
-- Component failures under normal use
-- Battery degradation below 80% capacity within warranty period
-- Connectivity issues (Bluetooth, USB) due to manufacturing defects
+### 📋 Product Registration
+To ensure seamless support, register your product warranty within 15 days of purchase at:
+- Official Registration page: **ambraneindia.com/pages/product-registration**
+- Alternatively, via: **myproductcare.com**
 
-### What is NOT Covered
-- Physical damage (cracks, dents, broken parts)
-- Water/liquid damage
-- Damage from unauthorized repair or modification
-- Serial number tampered or removed
-- Accidental damage
-- Normal wear and tear
+---
 
-### How to Claim Warranty
-1. Contact Ambrane support at 1800-XXX-XXXX or visit support.ambrane.com
-2. Provide: Product name, Serial number, Purchase date, Proof of purchase (invoice)
-3. Describe the issue clearly
-4. Ship to nearest service center (reverse pickup arranged by Ambrane)
+## What is Covered & Excluded
 
-### Extended Warranty
-Extended warranty (1 additional year) available via **My Product Care** at myproductcare.com.
+### ✅ Covered (Genuine Manufacturing Defects)
+- Component failures under normal use (charging issues, sound imbalance).
+- Bluetooth connectivity failures due to manufacturing defects.
+- Battery degradation below 80% capacity within the warranty period.
 
-### Service Centers
-Service centers available in 100+ cities across India.
-Find nearest: ambrane.com/service-center
+### ❌ NOT Covered (Warranty Void)
+- **Physical Damage**: Cracks, dents, broken parts, or damage caused by drops.
+- **Liquid Damage**: Water, sweat, or moisture ingress.
+- **Unauthorized Repair**: Products modified or repaired by unauthorized personnel.
+- **Tampering**: Serial number/Warranty sticker removed, tampered, or missing.
+- **Wear and Tear**: Normal cosmetic degradation over time.
+
+---
+
+## 📹 Mandatory Verification & Claim Process
+For processing a warranty claim or product replacement, the following verification is mandatory:
+1. **Unboxing Video**: An unboxing video of the package showing the product condition.
+2. **Handover Video**: A video showing the product being handed over to the pickup executive during the reverse pickup.
+
+### How to File a Claim:
+1. **Contact Support**: Reach out to customer care via phone/email/WhatsApp.
+2. **Provide Details**: Share the product name, serial number, proof of purchase (invoice), and verification video.
+3. **Assessment**: The support team will inspect the issue. If eligible, a reverse pickup is arranged.
+4. **Replacement**: Upon inspection at our service center, a replacement is processed.
+
+---
+
+## 📞 Support & Service Centers
+- **Customer Care Phone**: +91-11-69951111 (Monday to Saturday, 10 AM to 6 PM)
+- **Email**: care@ambraneindia.com
+- **Service Centers**: Services available in 100+ cities across India.
+  - Locate nearest service center: **ambraneindia.com/pages/service-center**

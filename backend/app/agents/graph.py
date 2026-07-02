@@ -110,7 +110,7 @@ def build_graph() -> StateGraph:
     graph.add_node("complaint",          complaint_agent)
     graph.add_node("human_escalation",   human_escalation_agent)
     graph.add_node("agent_assist",       agent_assist_agent)
-    graph.add_node("call_summary",       call_summary_agent)
+    graph.add_node("call_summarizer",    call_summary_agent)
     graph.add_node("post_call",          post_call_agent)
 
     # ── Entry point ───────────────────────────────────────────────────────────
@@ -148,7 +148,7 @@ def build_graph() -> StateGraph:
             agent_name,
             check_resolution,
             {
-                "resolved":       "call_summary",
+                "resolved":       "call_summarizer",
                 "needs_more_help": "intent_detection",   # re-detect intent
                 "escalate":       "human_escalation",
             },
@@ -156,10 +156,10 @@ def build_graph() -> StateGraph:
 
     # ── Human escalation → agent assist → summary ─────────────────────────────
     graph.add_edge("human_escalation", "agent_assist")
-    graph.add_edge("agent_assist",     "call_summary")
+    graph.add_edge("agent_assist",     "call_summarizer")
 
     # ── Post-call pipeline ────────────────────────────────────────────────────
-    graph.add_edge("call_summary", "post_call")
+    graph.add_edge("call_summarizer", "post_call")
     graph.add_edge("post_call",    END)
 
     return graph.compile()

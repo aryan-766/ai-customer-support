@@ -59,13 +59,13 @@ async def agent_assist_agent(state: CallState) -> dict:
         logger.error("agent_assist_error", error=str(e))
         suggestions = [{"suggestion": "Unable to generate suggestion", "kb_reference": None}]
 
-    # Push to human agent's channel
-    if human_agent_id:
-        await redis_manager.publish(
-            f"assist.{human_agent_id}",
-            {"type": "assist_suggestion", "data": suggestions, "call_id": call_id},
-        )
-        logger.info("assist_suggestion_sent", call_id=call_id, agent=human_agent_id)
+    # Push to human agent's channel (fallback to call_id)
+    target_agent_id = human_agent_id or call_id
+    await redis_manager.publish(
+        f"assist.{target_agent_id}",
+        {"type": "assist_suggestion", "data": suggestions, "call_id": call_id},
+    )
+    logger.info("assist_suggestion_sent", call_id=call_id, agent=target_agent_id)
 
     return {
         "assist_suggestions": suggestions,

@@ -111,7 +111,14 @@ class NimbusPost:
         Returns: pickup AWB number and scheduled date.
         """
         if not self.api_key:
-            return {"success": False, "message": "NimbusPost not configured"}
+            logger.warning("nimbuspost_not_configured_reverse_pickup")
+            return {
+                "success": True,
+                "pickup_awb": f"MOCK-RVP-{str(order_id).replace('-', '') or '12345'}",
+                "pickup_date": "Within 24-48 hours",
+                "courier": "Delhivery",
+                "message": "Reverse pickup scheduled successfully. (DEMO MODE)",
+            }
 
         try:
             async with httpx.AsyncClient(timeout=15) as client:
@@ -161,6 +168,46 @@ class NimbusPost:
 
     def _mock_tracking(self, tracking_id: str) -> dict:
         """Returns demo data when NimbusPost is not yet configured."""
+        clean_tr = str(tracking_id).upper().strip()
+        
+        # Call 2: RTO/Delayed/Undelivered Order (e.g., ORD-99887 / AMB-99887)
+        if "99887" in clean_tr:
+            return {
+                "tracking_id": tracking_id,
+                "status": "returned",
+                "current_location": "Mumbai Hub",
+                "eta": "Returned to Warehouse (RTO)",
+                "courier": "Delhivery",
+                "events": [
+                    {"status": "Picked Up", "location": "Warehouse", "time": "3 days ago 10:00 AM"},
+                    {"status": "Out for Delivery", "location": "Mumbai Hub", "time": "Yesterday 09:00 AM"},
+                    {"status": "Undelivered - Customer Unreachable", "location": "Mumbai Hub", "time": "Yesterday 05:00 PM"},
+                    {"status": "RTO Initiated", "location": "Mumbai Hub", "time": "Today 08:00 AM"},
+                ],
+                "is_rto": True,
+                "rto_reason": "Customer unreachable / Address incomplete after 3 attempts",
+                "_note": "DEMO DATA (RTO Case) — configure NIMBUSPOST_API_KEY in .env",
+            }
+            
+        # Call 3 (Optional extra demo): Delayed/NDR case (e.g. ORD-77665 / AMB-77665)
+        if "77665" in clean_tr:
+            return {
+                "tracking_id": tracking_id,
+                "status": "undelivered",
+                "current_location": "Bangalore Central",
+                "eta": "Delayed (Action Required)",
+                "courier": "BlueDart",
+                "events": [
+                    {"status": "Picked Up", "location": "Warehouse", "time": "2 days ago 11:00 AM"},
+                    {"status": "In Transit", "location": "Bangalore Central", "time": "Yesterday 04:00 PM"},
+                    {"status": "Delivery Failed - Incorrect Pincode", "location": "Bangalore Central", "time": "Today 10:00 AM"},
+                ],
+                "is_rto": False,
+                "rto_reason": "Incorrect pin code / Address correction required",
+                "_note": "DEMO DATA (NDR Case) — configure NIMBUSPOST_API_KEY in .env",
+            }
+
+        # Call 1: Standard Shipped Order (e.g. ORD-12345 / AMB-12345)
         return {
             "tracking_id": tracking_id,
             "status": "in_transit",
@@ -172,16 +219,45 @@ class NimbusPost:
                 {"status": "In Transit", "location": "Delhi Hub", "time": "Today 6:00 AM"},
             ],
             "is_rto": False,
-            "_note": "DEMO DATA — configure NIMBUSPOST_API_KEY in .env",
+            "_note": "DEMO DATA (Shipped Case) — configure NIMBUSPOST_API_KEY in .env",
         }
 
     def _mock_order_status(self, order_id: str) -> dict:
+        clean_ord = str(order_id).upper().strip()
+        
+        # Call 2: RTO/Delayed/Undelivered Order (e.g., ORD-99887 / AMB-99887)
+        if "99887" in clean_ord:
+            return {
+                "order_id": order_id,
+                "status": "returned",
+                "tracking_id": "AWB99887766",
+                "courier": "Delhivery",
+                "expected_delivery": "Returned to Warehouse (RTO)",
+                "is_rto": True,
+                "rto_reason": "Customer unreachable / Address incomplete after 3 attempts",
+                "_note": "DEMO DATA (RTO Case) — configure NIMBUSPOST_API_KEY in .env",
+            }
+            
+        # Call 3 (Optional extra demo): Delayed/NDR case (e.g. ORD-77665 / AMB-77665)
+        if "77665" in clean_ord:
+            return {
+                "order_id": order_id,
+                "status": "undelivered",
+                "tracking_id": "AWB77665544",
+                "courier": "BlueDart",
+                "expected_delivery": "Delayed (Action Required)",
+                "is_rto": False,
+                "rto_reason": "Incorrect pin code / Address correction required",
+                "_note": "DEMO DATA (NDR Case) — configure NIMBUSPOST_API_KEY in .env",
+            }
+
+        # Call 1: Standard Shipped Order (e.g. ORD-12345 / AMB-12345)
         return {
             "order_id": order_id,
             "status": "shipped",
-            "tracking_id": "DEMO123456",
+            "tracking_id": f"AWB{clean_ord.replace('-', '')}",
             "courier": "Delhivery",
             "expected_delivery": "Tomorrow",
             "is_rto": False,
-            "_note": "DEMO DATA — configure NIMBUSPOST_API_KEY in .env",
+            "_note": "DEMO DATA (Shipped Case) — configure NIMBUSPOST_API_KEY in .env",
         }

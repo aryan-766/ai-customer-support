@@ -45,7 +45,7 @@ fastmcp==2.3.4
 
 # Audio
 pyaudio==0.2.14
-webrtcvad==2.0.10
+webrtcvad-wheels
 pydub==0.25.1
 
 # HTTP
