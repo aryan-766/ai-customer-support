@@ -1,0 +1,843 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ambrane AI Voice Dialer</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        :root {
+            --bg-color: #0b0f19;
+            --panel-bg: rgba(17, 24, 39, 0.45);
+            --panel-border: rgba(255, 255, 255, 0.08);
+            --text-primary: #ffffff;
+            --text-secondary: #94a3b8;
+            --primary-glow: radial-gradient(circle, rgba(59, 130, 246, 0.15) 0%, rgba(147, 51, 234, 0.15) 100%);
+            --accent-blue: #3b82f6;
+            --accent-purple: #a855f7;
+            --accent-green: #10b981;
+            --accent-red: #ef4444;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(59, 130, 246, 0.1) 0, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(168, 85, 247, 0.1) 0, transparent 50%),
+                radial-gradient(at 50% 50%, rgba(15, 23, 42, 0.95) 0, rgba(15, 23, 42, 0.98) 100%);
+            color: var(--text-primary);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* Abstract glowing blobs for premium design aesthetics */
+        .glowing-blob {
+            position: absolute;
+            width: 400px;
+            height: 400px;
+            background: radial-gradient(circle, rgba(139, 92, 246, 0.18) 0%, transparent 70%);
+            border-radius: 50%;
+            filter: blur(40px);
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        .blob-1 { top: -10%; left: -10%; animation: float 15s ease-in-out infinite; }
+        .blob-2 { bottom: -10%; right: -10%; animation: float 20s ease-in-out infinite reverse; }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0) scale(1); }
+            50% { transform: translateY(-30px) scale(1.1); }
+        }
+
+        /* Main Container */
+        .container {
+            z-index: 1;
+            width: 100%;
+            max-width: 420px;
+            padding: 20px;
+        }
+
+        /* Glassmorphic Dialer Card */
+        .card {
+            background: var(--panel-bg);
+            border: 1px solid var(--panel-border);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border-radius: 32px;
+            padding: 40px 30px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent);
+        }
+
+        /* Top Brand Indicator */
+        .brand {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin-bottom: 30px;
+        }
+
+        .brand-logo {
+            width: 28px;
+            height: 28px;
+            background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4);
+        }
+
+        .brand-logo i {
+            font-size: 14px;
+            color: #fff;
+        }
+
+        .brand-text {
+            font-size: 15px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            background: linear-gradient(to right, #ffffff, #94a3b8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        /* Call Status Display */
+        .status-area {
+            margin-bottom: 35px;
+        }
+
+        .avatar-ring {
+            width: 130px;
+            height: 130px;
+            border-radius: 50%;
+            margin: 0 auto 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255, 255, 255, 0.02);
+            border: 2px solid rgba(255, 255, 255, 0.05);
+            position: relative;
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .avatar-ring.active {
+            border-color: var(--accent-blue);
+            box-shadow: 0 0 30px rgba(59, 130, 246, 0.2);
+            animation: pulse-ring 2s infinite;
+        }
+
+        .avatar-ring.connecting {
+            border-color: var(--accent-purple);
+            animation: pulse-connecting 1.5s infinite;
+        }
+
+        @keyframes pulse-ring {
+            0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.3); }
+            70% { transform: scale(1.02); box-shadow: 0 0 0 20px rgba(59, 130, 246, 0); }
+            100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(59, 130, 246, 0); }
+        }
+
+        @keyframes pulse-connecting {
+            0%, 100% { opacity: 0.6; }
+            50% { opacity: 1; border-color: var(--accent-purple); }
+        }
+
+        .avatar {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(168, 85, 247, 0.1) 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .avatar i {
+            font-size: 38px;
+            color: var(--text-secondary);
+        }
+
+        .avatar-ring.active .avatar i {
+            color: var(--accent-blue);
+        }
+
+        .status-title {
+            font-size: 22px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 6px;
+        }
+
+        .status-text {
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        .status-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background-color: var(--text-secondary);
+        }
+
+        .status-dot.active { background-color: var(--accent-green); animation: blink 1s infinite; }
+        .status-dot.connecting { background-color: var(--accent-purple); }
+        .status-dot.error { background-color: var(--accent-red); }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+
+        /* Wave Visualizer Canvas */
+        .visualizer-container {
+            width: 100%;
+            height: 50px;
+            margin-bottom: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        canvas {
+            width: 100%;
+            height: 100%;
+            opacity: 0.8;
+            transition: opacity 0.3s;
+        }
+
+        /* Dialer Controls */
+        .controls {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 24px;
+            margin-bottom: 35px;
+        }
+
+        .btn {
+            outline: none;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .btn-mute {
+            width: 54px;
+            height: 54px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            color: var(--text-secondary);
+        }
+
+        .btn-mute:hover:not(:disabled) {
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--text-primary);
+        }
+
+        .btn-mute.active {
+            background: rgba(239, 68, 68, 0.15);
+            border-color: rgba(239, 68, 68, 0.25);
+            color: var(--accent-red);
+        }
+
+        .btn-call {
+            width: 76px;
+            height: 76px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+            color: #fff;
+            box-shadow: 0 10px 25px rgba(59, 130, 246, 0.3);
+        }
+
+        .btn-call:hover {
+            transform: scale(1.05);
+            box-shadow: 0 15px 30px rgba(59, 130, 246, 0.45);
+        }
+
+        .btn-call.active {
+            background: linear-gradient(135deg, var(--accent-red), #dc2626);
+            box-shadow: 0 10px 25px rgba(239, 68, 68, 0.3);
+        }
+
+        .btn-call.active:hover {
+            box-shadow: 0 15px 30px rgba(239, 68, 68, 0.45);
+        }
+
+        /* Config Collapse Panel */
+        .config-toggle {
+            font-size: 12px;
+            color: var(--text-secondary);
+            background: none;
+            border: none;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            opacity: 0.6;
+            transition: opacity 0.2s;
+        }
+
+        .config-toggle:hover { opacity: 1; }
+
+        .config-panel {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.4s ease-out;
+            margin-top: 15px;
+        }
+
+        .config-panel.open {
+            max-height: 150px;
+        }
+
+        .input-group {
+            text-align: left;
+            margin-bottom: 12px;
+        }
+
+        .input-group label {
+            display: block;
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 6px;
+        }
+
+        .input-group input {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 10px;
+            padding: 10px 14px;
+            color: var(--text-primary);
+            font-size: 13px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .input-group input:focus {
+            border-color: var(--accent-blue);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="glowing-blob blob-1"></div>
+    <div class="glowing-blob blob-2"></div>
+
+    <div class="container">
+        <div class="card">
+            
+            <!-- Top brand header -->
+            <div class="brand">
+                <div class="brand-logo">
+                    <i data-lucide="phone-call"></i>
+                </div>
+                <span class="brand-text">Ambrane AI Care</span>
+            </div>
+
+            <!-- Avatar and Call Status Info -->
+            <div class="status-area">
+                <div id="avatarRing" class="avatar-ring">
+                    <div class="avatar">
+                        <i id="avatarIcon" data-lucide="bot"></i>
+                    </div>
+                </div>
+                <h2 id="statusTitle" class="status-title">Ambrane Assistant</h2>
+                <div class="status-text">
+                    <div id="statusDot" class="status-dot"></div>
+                    <span id="statusLabel">Disconnected</span>
+                    <span id="callDuration" style="display: none; margin-left: 5px; font-variant-numeric: tabular-nums;">(00:00)</span>
+                </div>
+            </div>
+
+            <!-- Waveform Canvas -->
+            <div class="visualizer-container">
+                <canvas id="waveformCanvas"></canvas>
+            </div>
+
+            <!-- Call Controller Buttons -->
+            <div class="controls">
+                <button id="btnMute" class="btn btn-mute" disabled>
+                    <i id="muteIcon" data-lucide="mic"></i>
+                </button>
+                <button id="btnCall" class="btn btn-call">
+                    <i id="callIcon" data-lucide="phone"></i>
+                </button>
+                <button id="btnSettings" class="btn btn-mute" style="border-radius: 50%;">
+                    <i data-lucide="sliders"></i>
+                </button>
+            </div>
+
+            <!-- Settings collapsible configuration -->
+            <div id="configPanel" class="config-panel">
+                <div class="input-group">
+                    <label for="apiUrl">API Server URL (HTTP/HTTPS)</label>
+                    <input type="text" id="apiUrl" value="http://localhost:8000" placeholder="http://localhost:8000">
+                </div>
+                <div class="input-group">
+                    <label for="customerMobile">Customer Mobile Number</label>
+                    <input type="text" id="customerMobile" value="9876543210" placeholder="e.g. 9876543210">
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        // DOM Elements
+        const btnCall = document.getElementById('btnCall');
+        const btnMute = document.getElementById('btnMute');
+        const btnSettings = document.getElementById('btnSettings');
+        const configPanel = document.getElementById('configPanel');
+        const statusDot = document.getElementById('statusDot');
+        const statusLabel = document.getElementById('statusLabel');
+        const statusTitle = document.getElementById('statusTitle');
+        const callDuration = document.getElementById('callDuration');
+        const avatarRing = document.getElementById('avatarRing');
+        const avatarIcon = document.getElementById('avatarIcon');
+        const muteIcon = document.getElementById('muteIcon');
+        const callIcon = document.getElementById('callIcon');
+        const canvas = document.getElementById('waveformCanvas');
+        const canvasCtx = canvas.getContext('2d');
+        const apiUrlInput = document.getElementById('apiUrl');
+        const mobileInput = document.getElementById('customerMobile');
+
+        // Audio and State variables
+        let isCallActive = false;
+        let isMuted = false;
+        let ws = null;
+        let audioContext = null;
+        let scriptNode = null;
+        let mediaStream = null;
+        let durationTimer = null;
+        let callStartTime = 0;
+        let nextPlayTime = 0;
+        const PLAY_RATE = 24000;
+        
+        // Visualizer variables
+        let analyser = null;
+        let dataArray = null;
+        let animationId = null;
+
+        // Initialize Lucide icons
+        lucide.createIcons();
+
+        // Canvas setup for high DPI
+        function setupCanvas() {
+            const dpr = window.devicePixelRatio || 1;
+            const rect = canvas.getBoundingClientRect();
+            canvas.width = rect.width * dpr;
+            canvas.height = rect.height * dpr;
+            canvasCtx.scale(dpr, dpr);
+        }
+        setupCanvas();
+        window.addEventListener('resize', setupCanvas);
+
+        // Visualizer draw loop
+        function drawVisualizer() {
+            const width = canvas.width / (window.devicePixelRatio || 1);
+            const height = canvas.height / (window.devicePixelRatio || 1);
+            
+            animationId = requestAnimationFrame(drawVisualizer);
+            
+            canvasCtx.fillStyle = 'rgba(11, 15, 25, 0.3)';
+            canvasCtx.fillRect(0, 0, width, height);
+
+            if (!isCallActive || !analyser) {
+                // Draw idle flat line with a subtle pulse
+                canvasCtx.lineWidth = 2;
+                canvasCtx.strokeStyle = 'rgba(255, 255, 255, 0.05)';
+                canvasCtx.beginPath();
+                canvasCtx.moveTo(0, height / 2);
+                canvasCtx.lineTo(width, height / 2);
+                canvasCtx.stroke();
+                return;
+            }
+
+            analyser.getByteTimeDomainData(dataArray);
+            
+            canvasCtx.lineWidth = 2.5;
+            // Create a gradient for the wave
+            const gradient = canvasCtx.createLinearGradient(0, 0, width, 0);
+            gradient.addColorStop(0, '#3b82f6');
+            gradient.addColorStop(0.5, '#a855f7');
+            gradient.addColorStop(1, '#3b82f6');
+            
+            canvasCtx.strokeStyle = gradient;
+            canvasCtx.beginPath();
+
+            const sliceWidth = width / dataArray.length;
+            let x = 0;
+
+            for (let i = 0; i < dataArray.length; i++) {
+                const v = dataArray[i] / 128.0;
+                const y = (v * height) / 2;
+
+                if (i === 0) {
+                    canvasCtx.moveTo(x, y);
+                } else {
+                    canvasCtx.lineTo(x, y);
+                }
+
+                x += sliceWidth;
+            }
+
+            canvasCtx.lineTo(width, height / 2);
+            canvasCtx.stroke();
+        }
+        drawVisualizer(); // start visualizer loop (idle state)
+
+        // Config panel toggle
+        btnSettings.addEventListener('click', () => {
+            configPanel.classList.toggle('open');
+        });
+
+        // Toggle Mute Click
+        btnMute.addEventListener('click', () => {
+            isMuted = !isMuted;
+            if (isMuted) {
+                btnMute.classList.add('active');
+                btnMute.setAttribute('title', 'Unmute');
+                muteIcon.setAttribute('data-lucide', 'mic-off');
+                statusLabel.innerText = "Muted";
+            } else {
+                btnMute.classList.remove('active');
+                btnMute.setAttribute('title', 'Mute');
+                muteIcon.setAttribute('data-lucide', 'mic');
+                statusLabel.innerText = "Active";
+            }
+            lucide.createIcons({ attrs: { id: 'muteIcon' } });
+        });
+
+        // Call Button Click Handler
+        btnCall.addEventListener('click', () => {
+            if (isCallActive) {
+                endCall();
+            } else {
+                startCall();
+            }
+        });
+
+        // Linear interpolation to convert and resample audio
+        function resampleAndConvert(inputBuffer, fromRate, toRate) {
+            const ratio = fromRate / toRate;
+            const newLength = Math.round(inputBuffer.length / ratio);
+            const result = new Int16Array(newLength);
+            let offset = 0;
+            for (let i = 0; i < newLength; i++) {
+                const nextOffset = Math.round((i + 1) * ratio);
+                let MathRatio = (i + 1) * ratio;
+                let accum = 0;
+                let count = 0;
+                for (let j = offset; j < nextOffset && j < inputBuffer.length; j++) {
+                    accum += inputBuffer[j];
+                    count++;
+                }
+                if (count > 0) {
+                    const sample = accum / count;
+                    result[i] = sample < 0 ? sample * 32768 : sample * 32767;
+                }
+                offset = nextOffset;
+            }
+            return result.buffer;
+        }
+
+        // Start call routine
+        async function startCall() {
+            setLoadingState(true);
+            updateUI("connecting", "Connecting...", "Connecting to server...");
+
+            const rawApiUrl = apiUrlInput.value.trim() || "http://localhost:8000";
+            const customerMobile = mobileInput.value.trim() || "9876543210";
+
+            // Resolve websocket URL from HTTP base API URL
+            let baseUrl = rawApiUrl.replace(/\/$/, "");
+            let wsBaseUrl = baseUrl.replace(/^http/, "ws");
+
+            try {
+                // 1. Post to start endpoint
+                const response = await fetch(`${baseUrl}/api/v1/calls/start`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        customer_mobile: customerMobile,
+                        channel: 'phone'
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Server returned HTTP ${response.status}`);
+                }
+
+                const data = await response.json();
+                const callId = data.call_id;
+                // Construct the absolute WebSocket URL
+                const wsUrl = `${wsBaseUrl}/ws/call/${callId}`;
+
+                console.log(`Call Session started! Call ID: ${callId}. Connecting WebSocket: ${wsUrl}`);
+
+                // 2. Initialize microphone stream
+                mediaStream = await navigator.mediaDevices.getUserMedia({
+                    audio: {
+                        echoCancellation: true,
+                        noiseSuppression: true,
+                        autoGainControl: true
+                    }
+                });
+
+                // Initialize AudioContext early to prevent race conditions on receiving greeting audio
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                if (audioContext.state === "suspended") {
+                    await audioContext.resume();
+                }
+
+                // 3. Setup WebSocket connection
+                ws = new WebSocket(wsUrl);
+                ws.binaryType = "arraybuffer";
+
+                ws.onopen = () => {
+                    console.log("WebSocket connected!");
+                    isCallActive = true;
+                    setLoadingState(false);
+                    updateUI("active", "Active", "Connected to AI Receptionist");
+                    startTimer();
+                    initAudio(mediaStream);
+                };
+
+                ws.onmessage = (event) => {
+                    if (event.data instanceof ArrayBuffer) {
+                        // Received audio bytes from agent, schedule playback
+                        playPCM16Chunk(event.data);
+                    } else {
+                        // Received JSON event
+                        const eventData = JSON.parse(event.data);
+                        console.log("JSON Event Received:", eventData);
+                        if (eventData.type === "agent_response") {
+                            statusTitle.innerText = "AI Assistant";
+                        }
+                    }
+                };
+
+                ws.onerror = (err) => {
+                    console.error("WebSocket Error:", err);
+                    updateUI("error", "Error", "Connection error occurred.");
+                };
+
+                ws.onclose = () => {
+                    console.log("WebSocket connection closed.");
+                    if (isCallActive) {
+                        endCall();
+                    }
+                };
+
+            } catch (err) {
+                console.error("Failed to start voice session:", err);
+                setLoadingState(false);
+                updateUI("error", "Failed", err.message || "Failed to connect.");
+            }
+        }
+
+        // Initialize Audio context for recording and playback
+        function initAudio(stream) {
+            if (!audioContext) {
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            const source = audioContext.createMediaStreamSource(stream);
+            
+            // ScriptProcessorNode handles chunk processing
+            scriptNode = audioContext.createScriptProcessor(4096, 1, 1);
+            
+            // Visualizer setup
+            analyser = audioContext.createAnalyser();
+            analyser.fftSize = 256;
+            dataArray = new Uint8Array(analyser.frequencyBinCount);
+            source.connect(analyser);
+
+            scriptNode.onaudioprocess = (e) => {
+                if (!isCallActive || isMuted || !ws || ws.readyState !== WebSocket.OPEN) return;
+                
+                const inputData = e.inputBuffer.getChannelData(0);
+                // Convert browser input (typically 44.1k/48k float) to 16kHz PCM16 bytes
+                const pcm16Data = resampleAndConvert(inputData, audioContext.sampleRate, 16000);
+                
+                ws.send(pcm16Data);
+            };
+
+            source.connect(scriptNode);
+            scriptNode.connect(audioContext.destination);
+            nextPlayTime = 0;
+        }
+
+        // Playback PCM16 chunks received from backend
+        function playPCM16Chunk(arrayBuffer) {
+            if (!audioContext) return;
+            
+            const int16Array = new Int16Array(arrayBuffer);
+            const float32Array = new Float32Array(int16Array.length);
+            
+            // Convert PCM16 Int16 back to Float32 range [-1.0, 1.0]
+            for (let i = 0; i < int16Array.length; i++) {
+                float32Array[i] = int16Array[i] / 32768.0;
+            }
+            
+            // Create AudioBuffer at 24kHz
+            const audioBuffer = audioContext.createBuffer(1, float32Array.length, PLAY_RATE);
+            audioBuffer.copyToChannel(float32Array, 0);
+            
+            const sourceNode = audioContext.createBufferSource();
+            sourceNode.buffer = audioBuffer;
+            sourceNode.connect(audioContext.destination);
+            
+            const now = audioContext.currentTime;
+            if (nextPlayTime < now) {
+                nextPlayTime = now + 0.04; // Add a tiny 40ms safety buffer
+            }
+            
+            sourceNode.start(nextPlayTime);
+            nextPlayTime += audioBuffer.duration;
+        }
+
+        // End active voice call session
+        function endCall() {
+            console.log("Ending Call Session...");
+            isCallActive = false;
+            
+            stopTimer();
+
+            // Stop audio nodes and streams
+            if (scriptNode) {
+                scriptNode.disconnect();
+                scriptNode = null;
+            }
+            if (mediaStream) {
+                mediaStream.getTracks().forEach(track => track.stop());
+                mediaStream = null;
+            }
+            if (audioContext) {
+                audioContext.close();
+                audioContext = null;
+            }
+
+            analyser = null;
+            dataArray = null;
+
+            // Close WebSocket
+            if (ws) {
+                if (ws.readyState === WebSocket.OPEN || ws.readyState === WebSocket.CONNECTING) {
+                    ws.close();
+                }
+                ws = null;
+            }
+
+            updateUI("disconnected", "Disconnected", "Call session ended.");
+        }
+
+        // Loading button state control
+        function setLoadingState(loading) {
+            btnCall.disabled = loading;
+            btnMute.disabled = !isCallActive || loading;
+        }
+
+        // Update active UI elements based on state
+        function updateUI(state, labelText, titleText) {
+            statusDot.className = "status-dot";
+            avatarRing.className = "avatar-ring";
+            statusLabel.innerText = labelText;
+
+            if (state === "connecting") {
+                statusDot.classList.add("connecting");
+                avatarRing.classList.add("connecting");
+                btnCall.classList.add("active");
+                callIcon.setAttribute("data-lucide", "phone-off");
+                btnMute.disabled = true;
+            } 
+            else if (state === "active") {
+                statusDot.classList.add("active");
+                avatarRing.classList.add("active");
+                btnCall.classList.add("active");
+                callIcon.setAttribute("data-lucide", "phone-off");
+                btnMute.disabled = false;
+                callDuration.style.display = "inline";
+            } 
+            else if (state === "disconnected" || state === "error") {
+                if (state === "error") {
+                    statusDot.classList.add("error");
+                    statusTitle.innerText = "Connection Failed";
+                } else {
+                    statusTitle.innerText = "Ambrane Assistant";
+                }
+                btnCall.classList.remove("active");
+                callIcon.setAttribute("data-lucide", "phone");
+                btnMute.disabled = true;
+                btnMute.classList.remove("active");
+                isMuted = false;
+                muteIcon.setAttribute("data-lucide", "mic");
+                callDuration.style.display = "none";
+            }
+            lucide.createIcons();
+        }
+
+        // Timer functions
+        function startTimer() {
+            callStartTime = Date.now();
+            durationTimer = setInterval(() => {
+                const delta = Date.now() - callStartTime;
+                const totalSec = Math.floor(delta / 1000);
+                const minutes = Math.floor(totalSec / 60).toString().padStart(2, '0');
+                const seconds = (totalSec % 60).toString().padStart(2, '0');
+                callDuration.innerText = `(${minutes}:${seconds})`;
+            }, 1000);
+        }
+
+        function stopTimer() {
+            if (durationTimer) {
+                clearInterval(durationTimer);
+                durationTimer = null;
+            }
+        }
+    </script>
+</body>
+</html>

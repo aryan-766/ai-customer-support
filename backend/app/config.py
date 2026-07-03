@@ -4,6 +4,8 @@ Uses pydantic-settings for validation and type safety.
 """
 
 from functools import lru_cache
+import os
+os.environ["TTS_VOICE"] = "alba"
 from typing import Literal, List
 from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -47,7 +49,7 @@ class Settings(BaseSettings):
 
     # ── STT ────────────────────────────────────────────────────────────────────
     STT_PROVIDER: str = "faster_whisper"
-    STT_MODEL_SIZE: str = "small"
+    STT_MODEL_SIZE: str = "base"
     STT_DEVICE: str = "cpu"
     STT_COMPUTE_TYPE: str = "int8"
 
@@ -60,9 +62,8 @@ class Settings(BaseSettings):
     LLM_TIMEOUT: int = 30
 
     # ── TTS ────────────────────────────────────────────────────────────────────
-    TTS_PROVIDER: str = "kokoro"
-    TTS_VOICE: str = "af_heart"
-    TTS_SAMPLE_RATE: int = 24000
+    TTS_PROVIDER: str = "pocket"
+    TTS_VOICE: str = "alba" # Forced value
 
     # ── HuggingFace Models ─────────────────────────────────────────────────────
     EMBED_MODEL: str = "BAAI/bge-small-en-v1.5"

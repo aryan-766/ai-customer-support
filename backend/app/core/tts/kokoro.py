@@ -64,6 +64,12 @@ class KokoroTTS(BaseTTSProvider):
             audio_segments = []
             for _, _, audio in generator:
                 if audio is not None and len(audio) > 0:
+                    if hasattr(audio, "cpu"):
+                        audio = audio.cpu().numpy()
+                    elif hasattr(audio, "numpy"):
+                        audio = audio.numpy()
+                    elif not isinstance(audio, np.ndarray):
+                        audio = np.array(audio)
                     audio_segments.append(audio)
             if not audio_segments:
                 return b""
@@ -104,5 +110,11 @@ class KokoroTTS(BaseTTSProvider):
 
             _, _, audio = item
             if audio is not None and len(audio) > 0:
+                if hasattr(audio, "cpu"):
+                    audio = audio.cpu().numpy()
+                elif hasattr(audio, "numpy"):
+                    audio = audio.numpy()
+                elif not isinstance(audio, np.ndarray):
+                    audio = np.array(audio)
                 audio_int16 = (audio * 32767).astype(np.int16)
                 yield audio_int16.tobytes()

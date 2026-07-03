@@ -35,7 +35,24 @@ async def lifespan(app: FastAPI):
     await registry.initialize()
     logger.info("models_loaded")
 
+    # Pre-load TTS Provider
+    try:
+        from app.core.tts.factory import TTSFactory
+        tts = TTSFactory.get_provider()
+        logger.info("preloading_tts_model")
+        # Initialize early to trigger model download/loading
+        tts._load_model()
+    except Exception as e:
+        logger.error("tts_preload_failed", error=str(e))
 
+    # Pre-load LLM (Ollama)
+    try:
+        from app.core.llm.factory import LLMFactory
+        llm = LLMFactory.get_provider()
+        logger.info("preloading_llm_model")
+        await llm.generate(prompt="hi")
+    except Exception as e:
+        logger.error("llm_preload_failed", error=str(e))
 
     # Setup Qdrant collection if missing
     from app.core.rag.retriever import setup_qdrant_collection
@@ -103,6 +120,14 @@ def create_app() -> FastAPI:
             "version": "1.0.0",
             "env": settings.APP_ENV,
         }
+        
+    @app.exception_handler(Exception)
+    async def global_exception_handler(request, exc):
+        import traceback
+        return __import__("fastapi").responses.JSONResponse(
+            status_code=500,
+            content={"detail": "Internal Server Error", "traceback": traceback.format_exception(type(exc), exc, exc.__traceback__)}
+        )
 
     return app
 

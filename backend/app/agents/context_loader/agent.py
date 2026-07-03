@@ -20,7 +20,7 @@ async def context_loader_agent(state: CallState) -> dict:
 
     try:
         from app.core.database import AsyncSessionLocal
-        from app.models.customer import Customer
+        from app.models import Customer
         from sqlalchemy import select, text
 
         async with AsyncSessionLocal() as db:

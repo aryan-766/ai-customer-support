@@ -78,49 +78,41 @@ async def call_websocket(
 
     # Send initial greeting immediately upon call connection
     try:
-        # Run receptionist agent directly to get greeting without executing the whole graph
-        from app.agents.receptionist.agent import receptionist_agent
-        result = await receptionist_agent(state)
+        response_text = "Welcome to Ambrane customer support. How can I help you today?"
         
-        # Get the greeting message
-        last_ai_msg = result.get("messages", [])[0] if result.get("messages") else None
+        # Send greeting text event to websocket
+        await websocket.send_text(json.dumps({
+            "type": "agent_response",
+            "text": response_text,
+            "agent": "receptionist",
+            "intent": None,
+            "citations": [],
+        }))
         
-        if last_ai_msg:
-            response_text = last_ai_msg.content
+        # Save to Redis transcript
+        await redis_manager.append_transcript(call_id, {
+            "speaker": "receptionist",
+            "text": response_text,
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+        })
+        
+        # Publish to agent dashboard
+        await redis_manager.publish(f"transcript.{call_id}", {
+            "type": "transcript_chunk",
+            "text": response_text,
+            "speaker": "receptionist",
+        })
+        
+        # Synthesize and send greeting audio
+        from app.core.tts.factory import TTSFactory
+        tts = TTSFactory.get_provider()
+        async for audio_chunk in tts.synthesize_stream(response_text):
+            await websocket.send_bytes(audio_chunk)
             
-            # Send greeting text event to websocket
-            await websocket.send_text(json.dumps({
-                "type": "agent_response",
-                "text": response_text,
-                "agent": "receptionist",
-                "intent": None,
-                "citations": [],
-            }))
-            
-            # Save to Redis transcript
-            await redis_manager.append_transcript(call_id, {
-                "speaker": "receptionist",
-                "text": response_text,
-                "timestamp": datetime.now(timezone.utc).isoformat(),
-            })
-            
-            # Publish to agent dashboard
-            await redis_manager.publish(f"transcript.{call_id}", {
-                "type": "transcript_chunk",
-                "text": response_text,
-                "speaker": "receptionist",
-            })
-            
-            # Synthesize and send greeting audio
-            from app.core.tts.factory import TTSFactory
-            tts = TTSFactory.get_provider()
-            async for audio_chunk in tts.synthesize_stream(response_text):
-                await websocket.send_bytes(audio_chunk)
-                
-        # Merge result into state and save to Redis so future messages append to this state
-        state.update(result)
-        await redis_manager.save_call_state(call_id, state)
     except Exception as e:
+        import traceback
+        print("!!! INITIAL GREETING ERROR TRACEBACK !!!", flush=True)
+        traceback.print_exc()
         logger.error("initial_greeting_error", call_id=call_id, error=str(e))
 
     # Audio queue: WebSocket → STT
@@ -148,15 +140,13 @@ async def call_websocket(
         full_text_buffer = ""
 
         async for chunk in stt.transcribe_stream(audio_stream_gen()):
-            if not chunk.text:
+            if not chunk.text or not chunk.text.strip():
                 continue
-
-            full_text_buffer += " " + chunk.text
 
             # Send transcript chunk to client
             await websocket.send_text(json.dumps({
                 "type": "transcript_chunk",
-                "text": chunk.text,
+                "text": chunk.text.strip(),
                 "speaker": "customer",
                 "timestamp": datetime.now(timezone.utc).isoformat(),
                 "language": chunk.language,
@@ -165,21 +155,20 @@ async def call_websocket(
             # Save to Redis
             await redis_manager.append_transcript(call_id, {
                 "speaker": "customer",
-                "text": chunk.text,
+                "text": chunk.text.strip(),
                 "timestamp": datetime.now(timezone.utc).isoformat(),
             })
 
             # Publish for agent dashboard
             await redis_manager.publish(f"transcript.{call_id}", {
                 "type": "transcript_chunk",
-                "text": chunk.text,
+                "text": chunk.text.strip(),
                 "speaker": "customer",
             })
 
-        # After enough text, run agent graph
-        if full_text_buffer.strip():
+            # Run agent graph on the user's input chunk in real-time
             await _run_agent_and_respond(
-                call_id, full_text_buffer.strip(), state, websocket
+                call_id, chunk.text.strip(), state, websocket
             )
 
     # Run concurrently

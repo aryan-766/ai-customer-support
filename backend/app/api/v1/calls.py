@@ -31,11 +31,11 @@ class StartCallResponse(BaseModel):
 @router.post("/start", response_model=StartCallResponse)
 async def start_call(body: StartCallRequest, db: AsyncSession = Depends(get_db)):
     """Start a new call session. Returns call_id and WebSocket URL."""
-    call_id = str(uuid.uuid4())
+    call_uuid = uuid.uuid4()
     session_id = str(uuid.uuid4())
 
     # Create call record
-    call = Call(id=call_id, channel=body.channel, status="active")
+    call = Call(id=call_uuid, channel=body.channel, status="active")
 
     # Link customer if mobile provided
     if body.customer_mobile:
@@ -49,13 +49,14 @@ async def start_call(body: StartCallRequest, db: AsyncSession = Depends(get_db))
     db.add(call)
     await db.commit()
 
-    logger.info("call_started", call_id=call_id, channel=body.channel)
+    call_id_str = str(call_uuid)
+    logger.info("call_started", call_id=call_id_str, channel=body.channel)
 
     return StartCallResponse(
-        call_id=call_id,
+        call_id=call_id_str,
         session_id=session_id,
         status="active",
-        ws_url=f"ws://localhost:8000/ws/call/{call_id}",
+        ws_url=f"ws://localhost:8000/ws/call/{call_id_str}",
     )
 
 

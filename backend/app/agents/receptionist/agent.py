@@ -11,12 +11,10 @@ from app.core.llm.ollama import OllamaLLM
 logger = structlog.get_logger(__name__)
 
 GREETING_EN = (
-    "Welcome to Ambrane customer support! I'm your AI assistant. "
-    "How can I help you today?"
+    "Welcome to Ambrane customer support! How can I help you today?"
 )
 GREETING_HI = (
-    "Ambrane customer support mein aapka swagat hai! "
-    "Aaj main aapki kaise madad kar sakti hoon?"
+    "Ambrane customer support mein aapka swagat hai! Aaj main aapki kya sahayata kar sakti hoon?"
 )
 
 

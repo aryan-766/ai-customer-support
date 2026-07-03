@@ -28,6 +28,21 @@ class Customer(Base):
 
     calls:   "list[Call]"   = relationship("Call",   back_populates="customer")
     tickets: "list[Ticket]" = relationship("Ticket", back_populates="customer")
+    orders:  "list[Order]"  = relationship("Order",  back_populates="customer")
+
+
+class Order(Base):
+    __tablename__ = "orders"
+
+    id:             Mapped[uuid.UUID]      = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    customer_id:    Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), ForeignKey("customers.id"))
+    order_number:   Mapped[str]            = mapped_column(String(100), unique=True, index=True)
+    status:         Mapped[str]            = mapped_column(String(50), default="processing")
+    total_amount:   Mapped[float | None]   = mapped_column(Float)
+    created_at:     Mapped[datetime]       = mapped_column(DateTime(timezone=True), default=now_utc)
+    updated_at:     Mapped[datetime]       = mapped_column(DateTime(timezone=True), default=now_utc, onupdate=now_utc)
+    
+    customer: "Customer" = relationship("Customer", back_populates="orders")
 
 
 class Call(Base):
@@ -61,19 +76,17 @@ class Call(Base):
     # Resolution
     resolved:          Mapped[bool]         = mapped_column(Boolean, default=False)
     resolution_type:   Mapped[str | None]   = mapped_column(String(50))
-    zoho_ticket_id:    Mapped[str | None]   = mapped_column(String(100))
     human_agent_id:    Mapped[str | None]   = mapped_column(String(100))
-
-    # Content
-    transcript:        Mapped[list]         = mapped_column(JSON, default=list)
     ai_summary:        Mapped[str | None]   = mapped_column(Text)
-    citations:         Mapped[list]         = mapped_column(JSON, default=list)
-    follow_up_tasks:   Mapped[list]         = mapped_column(JSON, default=list)
-
+    
     created_at:        Mapped[datetime]     = mapped_column(DateTime(timezone=True), default=now_utc)
 
-    customer: "Customer" = relationship("Customer", back_populates="calls")
-    tickets:  "list[Ticket]" = relationship("Ticket", back_populates="call")
+    customer:    "Customer"           = relationship("Customer", back_populates="calls")
+    tickets:     "list[Ticket]"       = relationship("Ticket", back_populates="call")
+    transcripts: "list[Transcript]"   = relationship("Transcript", back_populates="call")
+    messages:    "list[Message]"      = relationship("Message", back_populates="call")
+    agent_logs:  "list[AgentLog]"     = relationship("AgentLog", back_populates="call")
+    tool_logs:   "list[ToolLog]"      = relationship("ToolLog", back_populates="call")
 
 
 class Ticket(Base):
@@ -92,6 +105,59 @@ class Ticket(Base):
 
     call:     "Call"     = relationship("Call",     back_populates="tickets")
     customer: "Customer" = relationship("Customer", back_populates="tickets")
+
+
+class Transcript(Base):
+    __tablename__ = "transcripts"
+    
+    id:          Mapped[int]            = mapped_column(Integer, primary_key=True, autoincrement=True)
+    call_id:     Mapped[uuid.UUID]      = mapped_column(UUID(as_uuid=True), ForeignKey("calls.id"), index=True)
+    role:        Mapped[str]            = mapped_column(String(20))  # human or ai
+    text:        Mapped[str]            = mapped_column(Text)
+    created_at:  Mapped[datetime]       = mapped_column(DateTime(timezone=True), default=now_utc)
+    
+    call: "Call" = relationship("Call", back_populates="transcripts")
+
+
+class Message(Base):
+    """LangGraph raw state messages"""
+    __tablename__ = "messages"
+    
+    id:          Mapped[int]            = mapped_column(Integer, primary_key=True, autoincrement=True)
+    call_id:     Mapped[uuid.UUID]      = mapped_column(UUID(as_uuid=True), ForeignKey("calls.id"), index=True)
+    node:        Mapped[str]            = mapped_column(String(100))
+    content:     Mapped[dict]           = mapped_column(JSON) # Store raw BaseMessage dict
+    created_at:  Mapped[datetime]       = mapped_column(DateTime(timezone=True), default=now_utc)
+    
+    call: "Call" = relationship("Call", back_populates="messages")
+
+
+class AgentLog(Base):
+    __tablename__ = "agent_logs"
+    
+    id:          Mapped[int]            = mapped_column(Integer, primary_key=True, autoincrement=True)
+    call_id:     Mapped[uuid.UUID]      = mapped_column(UUID(as_uuid=True), ForeignKey("calls.id"), index=True)
+    agent_name:  Mapped[str]            = mapped_column(String(100))
+    action:      Mapped[str]            = mapped_column(String(255))
+    latency_ms:  Mapped[int | None]     = mapped_column(Integer)
+    created_at:  Mapped[datetime]       = mapped_column(DateTime(timezone=True), default=now_utc)
+    
+    call: "Call" = relationship("Call", back_populates="agent_logs")
+
+
+class ToolLog(Base):
+    __tablename__ = "tool_logs"
+    
+    id:          Mapped[int]            = mapped_column(Integer, primary_key=True, autoincrement=True)
+    call_id:     Mapped[uuid.UUID]      = mapped_column(UUID(as_uuid=True), ForeignKey("calls.id"), index=True)
+    tool_name:   Mapped[str]            = mapped_column(String(100))
+    inputs:      Mapped[dict]           = mapped_column(JSON, default=dict)
+    outputs:     Mapped[dict]           = mapped_column(JSON, default=dict)
+    success:     Mapped[bool]           = mapped_column(Boolean, default=True)
+    latency_ms:  Mapped[int | None]     = mapped_column(Integer)
+    created_at:  Mapped[datetime]       = mapped_column(DateTime(timezone=True), default=now_utc)
+    
+    call: "Call" = relationship("Call", back_populates="tool_logs")
 
 
 class KBDocument(Base):
@@ -114,3 +180,4 @@ class AnalyticsEvent(Base):
     event_type:  Mapped[str | None]= mapped_column(String(100), index=True)
     event_data:  Mapped[dict]      = mapped_column(JSON, default=dict)
     occurred_at: Mapped[datetime]  = mapped_column(DateTime(timezone=True), default=now_utc, index=True)
+

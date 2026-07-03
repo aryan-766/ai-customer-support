@@ -98,7 +98,7 @@ async def post_call_agent(state: CallState) -> dict:
 async def _save_call_to_db(state: CallState):
     try:
         from app.core.database import AsyncSessionLocal
-        from app.models.call import Call
+        from app.models import Call
         from sqlalchemy import update
         import uuid
 

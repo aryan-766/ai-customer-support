@@ -146,7 +146,7 @@ async def _lookup_customer(auth_id: str) -> dict | None:
     # 2. Local Database lookup fallback
     try:
         from app.core.database import AsyncSessionLocal
-        from app.models.customer import Customer
+        from app.models import Customer
         from sqlalchemy import select
 
         async with AsyncSessionLocal() as db:
