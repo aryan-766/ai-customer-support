@@ -67,9 +67,9 @@ _tts_instance = None
 
 async def synthesize(text: str) -> bytes:
     global _tts_instance
-    from app.core.tts.kokoro import KokoroTTS
+    from app.core.tts.factory import TTSFactory
     if _tts_instance is None:
-        _tts_instance = KokoroTTS()
+        _tts_instance = TTSFactory.get_provider()
     chunks = []
     async for chunk in _tts_instance.synthesize_stream(text):
         chunks.append(chunk)
@@ -135,13 +135,7 @@ async def main():
     audio = await synthesize(greeting)
     play_audio(audio, "Receptionist greeting (English)")
 
-    # ── Hindi voice demo ──────────────────────────────────────────────────────
-    hindi_greeting = "Ambrane customer support mein aapka swagat hai! Aaj main aapki kya sahayata kar sakti hoon?"
-    print(f"\n  🤖  AI (Hindi): \"{hindi_greeting}\"")
-    from app.core.tts.kokoro import KokoroTTS as _KokoroHindi
-    _htts = _KokoroHindi()
-    hindi_audio = await _htts.synthesize(hindi_greeting, voice="hf_alpha")
-    play_audio(hindi_audio, "Hindi greeting (hf_alpha voice)")
+
 
     # ── STEP 2: Customer authenticates ────────────────────────────────────────
     user_q1 = "My customer ID is CUST-10001. I want to check my order status."
