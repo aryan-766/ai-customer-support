@@ -272,8 +272,14 @@ async def _create_call_record(call_id: str, channel: str, zoho_ticket_id: str | 
     """Create the call row in PostgreSQL when call starts."""
     try:
         async with AsyncSessionLocal() as db:
-            call = Call(id=call_id, channel=channel, status="active", zoho_ticket_id=zoho_ticket_id)
+            call = Call(id=call_id, channel=channel, status="active")
             db.add(call)
+            
+            if zoho_ticket_id:
+                from app.models import Ticket
+                ticket = Ticket(zoho_ticket_id=zoho_ticket_id, call_id=call_id)
+                db.add(ticket)
+                
             await db.commit()
     except Exception as e:
         logger.error("create_call_record_error", error=str(e))
