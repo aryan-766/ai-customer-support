@@ -77,6 +77,14 @@ async def authentication_agent(state: CallState) -> dict:
                     email=customer.get("email", "caller@unknown.com"),
                     subject_update=f"Call: {customer.get('name', 'Customer')} ({auth_id})"
                 )
+                
+                # Fetch recent ticket history to give context to business agents
+                contact_id = customer.get("id")
+                if contact_id:
+                    recent_tickets = await zoho.get_recent_tickets(contact_id)
+                    ctx["recent_tickets"] = recent_tickets
+                    logger.info("fetched_zoho_tickets", ticket_count=len(recent_tickets))
+                    
             except Exception as e:
                 logger.error("zoho_auth_update_ticket_error", ticket_id=zoho_ticket_id, error=str(e))
 

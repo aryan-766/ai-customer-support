@@ -94,6 +94,10 @@ class Settings(BaseSettings):
     DELHIVERY_TOKEN: str = ""
     DELHIVERY_BASE_URL: str = "https://track.delhivery.com/api"
 
+    # ── Shopify (Warranty) ────────────────────────────────────────────────────
+    SHOPIFY_SHOP_URL: str = ""
+    SHOPIFY_ACCESS_TOKEN: str = ""
+
     # ── My Product Care (Warranty) ────────────────────────────────────────────
     MPC_API_KEY: str = ""
     MPC_BASE_URL: str = "https://api.myproductcare.com/v1"

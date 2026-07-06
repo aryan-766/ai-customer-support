@@ -154,6 +154,40 @@ class ZohoDesk:
             logger.error("zoho_search_contact_error", val=search_value, error=str(e))
             return None
 
+    async def get_recent_tickets(self, contact_id: str) -> list:
+        """Fetch recent tickets for a customer."""
+        if not settings.ZOHO_CLIENT_ID or "your_zoho" in settings.ZOHO_CLIENT_ID.lower():
+            return [
+                {"ticketNumber": "1056", "subject": "Powerbank not charging", "status": "Closed", "createdTime": "2024-01-20T10:00:00Z"},
+                {"ticketNumber": "1089", "subject": "Where is my order?", "status": "Open", "createdTime": "2024-02-15T14:30:00Z"}
+            ]
+
+        try:
+            token = await self._get_token()
+            async with httpx.AsyncClient() as client:
+                resp = await client.get(
+                    f"{self.base_url}/tickets",
+                    headers={
+                        "Authorization": f"Zoho-oauthtoken {token}",
+                        "orgId": self.org_id,
+                    },
+                    params={"contactId": contact_id, "limit": 3, "sortBy": "-createdTime"},
+                )
+                resp.raise_for_status()
+                data = resp.json().get("data", [])
+                
+                return [
+                    {
+                        "ticketNumber": t.get("ticketNumber"),
+                        "subject": t.get("subject"),
+                        "status": t.get("status"),
+                        "createdTime": t.get("createdTime")
+                    } for t in data
+                ]
+        except Exception as e:
+            logger.error("zoho_get_tickets_error", contact_id=contact_id, error=str(e))
+            return []
+
     async def update_ticket_contact(self, ticket_id: str, email: str, subject_update: str) -> bool:
         """Update an existing ticket's subject/email/contact info in Zoho Desk."""
         if not settings.ZOHO_CLIENT_ID or "your_zoho" in settings.ZOHO_CLIENT_ID.lower():

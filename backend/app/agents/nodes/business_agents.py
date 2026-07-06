@@ -22,7 +22,17 @@ async def _generic_agent(state: CallState, role_prompt: str, tools_list: list) -
     transcript = state.get("transcript", [])
     recent_text = "\n".join([f"{t['speaker']}: {t['text']}" for t in transcript[-5:]])
     
-    system_prompt = f"{role_prompt}\n\nRecent conversation:\n{recent_text}\n\nRespond conversationally as an AI voice assistant. Keep it concise."
+    # Inject Zoho Ticket History
+    customer = state.get("customer_context", {})
+    recent_tickets = customer.get("recent_tickets", [])
+    ticket_history = ""
+    if recent_tickets:
+        ticket_history = "CUSTOMER RECENT SUPPORT TICKETS (Zoho Desk):\n"
+        for t in recent_tickets:
+            ticket_history += f"- Ticket {t.get('ticketNumber')}: {t.get('subject')} [{t.get('status')}]\n"
+        ticket_history += "\n"
+    
+    system_prompt = f"{role_prompt}\n\n{ticket_history}Recent conversation:\n{recent_text}\n\nRespond conversationally as an AI voice assistant. Keep it concise."
     
     try:
         response = await llm.generate(
@@ -47,7 +57,25 @@ async def faq_agent(state: CallState) -> dict:
     return await _generic_agent(state, prompt, [])
 
 async def order_agent(state: CallState) -> dict:
-    prompt = "You are an Ambrane Order Support Agent. Help the user check their order status."
+    prompt = "You are an Ambrane Order Support Agent. Help the user check their order status.\n\n"
+    
+    # Try to fetch Shopify Order Status Context
+    customer = state.get("customer_context", {})
+    phone = customer.get("mobile")
+    
+    if phone:
+        from app.integrations.shopify_client import ShopifyClient
+        shopify = ShopifyClient()
+        orders = await shopify.get_customer_orders(phone)
+        if orders:
+            order = orders[0]  # Most recent
+            prompt += f"LATEST SHOPIFY ORDER DATA:\nOrder Name: {order.get('name')}\nStatus: {order.get('fulfillment_status', 'Processing')}\nItems: {', '.join([i.get('title') for i in order.get('line_items', [])])}\n\n"
+        else:
+            prompt += "LATEST SHOPIFY ORDER DATA:\nNo recent orders found in Shopify.\n\n"
+            
+    # Placeholder for future OMS (e.g. NimbusPost) order tracking logic
+    prompt += "[Future OMS Tracking Status: Pending Integration]\n\n"
+    
     return await _generic_agent(state, prompt, [])
 
 async def complaint_agent(state: CallState) -> dict:
@@ -55,7 +83,18 @@ async def complaint_agent(state: CallState) -> dict:
     return await _generic_agent(state, prompt, [])
 
 async def tech_support_agent(state: CallState) -> dict:
-    prompt = "You are an Ambrane Technical Support Agent. Help troubleshoot device issues."
+    prompt = "You are an Ambrane Technical Support Agent. Help troubleshoot device issues and handle warranty queries.\n\n"
+    
+    # Try to fetch Shopify Warranty Context
+    customer = state.get("customer_context", {})
+    phone = customer.get("mobile")
+    
+    if phone:
+        from app.integrations.shopify_client import ShopifyClient
+        shopify = ShopifyClient()
+        warranty_info = await shopify.check_warranty_status(phone)
+        prompt += f"SHOPIFY WARRANTY STATUS FOR THIS CUSTOMER:\n{warranty_info}\n\n"
+        
     return await _generic_agent(state, prompt, [])
 
 async def registration_agent(state: CallState) -> dict:
@@ -65,3 +104,4 @@ async def registration_agent(state: CallState) -> dict:
 async def sales_agent(state: CallState) -> dict:
     prompt = "You are an Ambrane Sales Agent. Help the user choose a product to buy."
     return await _generic_agent(state, prompt, [])
+
