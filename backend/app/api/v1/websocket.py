@@ -18,7 +18,7 @@ import structlog
 
 from app.agents.state import initial_state
 from app.agents.graph import call_graph
-from app.core.stt.faster_whisper import FasterWhisperSTT
+from app.core.stt.factory import STTFactory
 from app.core.cache import redis_manager
 from app.models import Call
 from app.core.database import AsyncSessionLocal
@@ -46,7 +46,7 @@ async def call_websocket(
     """
     await websocket.accept()
     session_id = str(uuid.uuid4())
-    stt = FasterWhisperSTT()
+    stt = STTFactory.get_provider()
 
     logger.info("call_ws_connected", call_id=call_id, session_id=session_id)
 
@@ -196,9 +196,40 @@ async def _run_agent_and_respond(
         HumanMessage(content=user_text)
     ]
 
+    # Start TTS streaming listener for real-time text chunks
+    async def tts_listener():
+        pubsub = await redis_manager.subscribe(f"tts_stream.{call_id}")
+        from app.core.tts.factory import TTSFactory
+        tts = TTSFactory.get_provider()
+        
+        try:
+            async for message in pubsub.listen():
+                if message["type"] == "message":
+                    data = json.loads(message["data"])
+                    text_chunk = data.get("text", "")
+                    
+                    if text_chunk == "[END_STREAM]":
+                        break
+                        
+                    if text_chunk:
+                        try:
+                            async for audio_chunk in tts.synthesize_stream(text_chunk):
+                                await websocket.send_bytes(audio_chunk)
+                        except Exception as e:
+                            logger.error("streaming_tts_error", error=str(e))
+        except Exception as err:
+            logger.error("tts_listener_error", error=str(err))
+        finally:
+            await pubsub.unsubscribe()
+
+    listener_task = asyncio.create_task(tts_listener())
+
     try:
         # Run the full agent graph
         result = await call_graph.ainvoke(state)
+        
+        # Wait for TTS stream to finish
+        await listener_task
 
         # Get the last AI message
         last_ai_msg = None
@@ -232,15 +263,6 @@ async def _run_agent_and_respond(
                 "text": response_text,
                 "speaker": result.get("active_agent", "ai"),
             })
-
-            # Stream TTS response back to customer client as binary audio chunks
-            try:
-                from app.core.tts.factory import TTSFactory
-                tts = TTSFactory.get_provider()
-                async for audio_chunk in tts.synthesize_stream(response_text):
-                    await websocket.send_bytes(audio_chunk)
-            except Exception as tts_err:
-                logger.error("tts_synthesis_error", call_id=call_id, error=str(tts_err))
 
         # Send intent detected event
         if result.get("intent"):

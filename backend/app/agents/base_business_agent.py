@@ -96,10 +96,31 @@ Be helpful, concise, and cite sources using [citation_id] format when using know
 
     # LLM generation
     try:
-        response = await llm.generate(user_prompt, system=system_prompt_guided)
-        response_text = response.text
-        logger.info(f"{agent_name}_response_generated",
-                    call_id=call_id, tokens=response.completion_tokens)
+        response_text = ""
+        current_sentence = ""
+        sentence_enders = {'.', '?', '!', '\n', '।', ','}
+        
+        from app.core.cache import redis_manager
+        
+        async for token in llm.generate_stream(user_prompt, system=system_prompt_guided):
+            response_text += token
+            current_sentence += token
+            
+            if any(ender in token for ender in sentence_enders):
+                clean_sentence = current_sentence.strip()
+                # Skip publishing system tags like [RESOLVED]
+                if clean_sentence and not clean_sentence.startswith("["):
+                    await redis_manager.publish(f"tts_stream.{call_id}", {"text": clean_sentence})
+                current_sentence = ""
+                
+        if current_sentence.strip():
+            clean_sentence = current_sentence.strip()
+            if not clean_sentence.startswith("["):
+                await redis_manager.publish(f"tts_stream.{call_id}", {"text": clean_sentence})
+                
+        await redis_manager.publish(f"tts_stream.{call_id}", {"text": "[END_STREAM]"})
+        
+        logger.info(f"{agent_name}_response_generated", call_id=call_id)
     except Exception as e:
         logger.error(f"{agent_name}_llm_error", error=str(e))
         response_text = (

@@ -22,6 +22,9 @@ Allowed intents:
 - technical_support (device not working, setup help, troubleshooting)
 - registration (registering warranty, creating account)
 - sales (wanting to buy something, asking about product features for purchase)
+- warranty (warranty claim, warranty status check, warranty policy questions)
+- invoice (invoice request, GST invoice, download invoice)
+- return (return product, replacement request, reverse pickup)
 - escalate (explicitly asking to speak to a human or manager)
 
 Format:

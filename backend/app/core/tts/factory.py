@@ -21,6 +21,9 @@ class TTSFactory:
             elif provider_name == "pocket":
                 from app.core.tts.pocket import PocketTTS
                 cls._provider = PocketTTS()
+            elif provider_name == "elevenlabs":
+                from app.core.tts.elevenlabs import ElevenLabsTTS
+                cls._provider = ElevenLabsTTS()
             else:
                 raise ValueError(f"Unsupported TTS provider: {settings.TTS_PROVIDER}")
         return cls._provider

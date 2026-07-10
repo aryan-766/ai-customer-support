@@ -27,9 +27,14 @@ def route_intent(state: CallState) -> str:
         "complaint": "complaint_agent",
         "technical_support": "tech_support_agent",
         "registration": "registration_agent",
-        "sales": "sales_agent"
+        "sales": "sales_agent",
+        "warranty": "warranty_agent",
+        "invoice": "invoice_agent",
+        "return": "return_agent",
+        "replacement": "return_agent",
     }
     
     target = routes.get(intent, "faq_agent")  # Default to FAQ if unknown
     logger.info("routing_decision", intent=intent, target=target)
     return target
+

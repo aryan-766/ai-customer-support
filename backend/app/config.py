@@ -48,7 +48,8 @@ class Settings(BaseSettings):
     QDRANT_COLLECTION: str = "ambrane_kb"
 
     # ── STT ────────────────────────────────────────────────────────────────────
-    STT_PROVIDER: str = "faster_whisper"
+    STT_PROVIDER: str = "deepgram"
+    DEEPGRAM_API_KEY: str = ""
     STT_MODEL_SIZE: str = "base"
     STT_DEVICE: str = "cpu"
     STT_COMPUTE_TYPE: str = "int8"
@@ -62,8 +63,10 @@ class Settings(BaseSettings):
     LLM_TIMEOUT: int = 30
 
     # ── TTS ────────────────────────────────────────────────────────────────────
-    TTS_PROVIDER: str = "pocket"
+    TTS_PROVIDER: str = "elevenlabs"
     TTS_VOICE: str = "alba" # Forced value
+    ELEVENLABS_API_KEY: str = ""
+    ELEVENLABS_VOICE_ID: str = "21m00Tcm4TlvDq8ikWAM"
 
     # ── HuggingFace Models ─────────────────────────────────────────────────────
     EMBED_MODEL: str = "BAAI/bge-small-en-v1.5"
