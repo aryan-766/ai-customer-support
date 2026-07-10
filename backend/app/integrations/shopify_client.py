@@ -126,3 +126,56 @@ class ShopifyClient:
             "status": "success",
             "items": warranty_items
         }
+
+    async def get_order_status(self, order_id_or_name: str) -> dict:
+        """Fetch an order by name or ID and return its tracking status."""
+        if not self.is_configured:
+            return {
+                "status": "Shipped (Mock)",
+                "tracking_company": "Mock Courier",
+                "tracking_number": "MOCK12345",
+                "tracking_url": "https://mock.com/track/12345"
+            }
+
+        clean_id = order_id_or_name.strip()
+        url = f"https://{self.shop_url}/admin/api/2024-01/orders.json"
+        
+        headers = {
+            "X-Shopify-Access-Token": self.access_token,
+            "Content-Type": "application/json"
+        }
+        
+        try:
+            async with httpx.AsyncClient() as client:
+                # Search by name first (e.g. #12345)
+                params = {"name": clean_id, "status": "any"}
+                res = await client.get(url, params=params, headers=headers, timeout=10.0)
+                res.raise_for_status()
+                orders = res.json().get("orders", [])
+                
+                if not orders:
+                    return {"status": "error", "message": "Order not found."}
+                
+                order = orders[0]
+                status_info = {
+                    "order_name": order.get("name"),
+                    "financial_status": order.get("financial_status"),
+                    "fulfillment_status": order.get("fulfillment_status") or "unfulfilled",
+                    "status": "Confirmed"
+                }
+                
+                # Check fulfillments for tracking
+                fulfillments = order.get("fulfillments", [])
+                if fulfillments:
+                    latest = fulfillments[-1]
+                    status_info["status"] = latest.get("shipment_status", "Shipped")
+                    status_info["tracking_company"] = latest.get("tracking_company")
+                    status_info["tracking_number"] = latest.get("tracking_number")
+                    status_info["tracking_url"] = latest.get("tracking_url")
+                    
+                return status_info
+                
+        except Exception as e:
+            logger.error("shopify_get_order_error", error=str(e), order_id=order_id_or_name)
+            return {"status": "error", "message": "Failed to fetch order status."}
+

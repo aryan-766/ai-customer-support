@@ -89,21 +89,13 @@ class Settings(BaseSettings):
     ZOHO_ORG_ID: str = ""
     ZOHO_DESK_URL: str = "https://desk.zoho.in/api/v1"
 
-    # ── NimbusPost (Courier Aggregator / OMS) ────────────────────────────────
-    NIMBUSPOST_API_KEY: str = ""
-    NIMBUSPOST_BASE_URL: str = "https://api.nimbuspost.com/v1"
 
-    # ── Courier ───────────────────────────────────────────────────────────────
-    DELHIVERY_TOKEN: str = ""
-    DELHIVERY_BASE_URL: str = "https://track.delhivery.com/api"
 
     # ── Shopify (Warranty) ────────────────────────────────────────────────────
     SHOPIFY_SHOP_URL: str = ""
     SHOPIFY_ACCESS_TOKEN: str = ""
 
-    # ── My Product Care (Warranty) ────────────────────────────────────────────
-    MPC_API_KEY: str = ""
-    MPC_BASE_URL: str = "https://api.myproductcare.com/v1"
+
 
     # ── Notifications ─────────────────────────────────────────────────────────
     MSG91_AUTH_KEY: str = ""

@@ -12,7 +12,7 @@ from app.config import settings
 from app.core.database import engine, Base
 from app.core.cache import redis_manager
 from app.core.models_loader import ModelRegistry
-from app.api.v1 import calls, agents, analytics, tickets, knowledge, websocket
+from app.api.v1 import calls, agents, analytics, tickets, knowledge, websocket, san_software
 from app.utils.logger import setup_logging
 from prometheus_fastapi_instrumentator import Instrumentator
 
@@ -109,6 +109,7 @@ def create_app() -> FastAPI:
     app.include_router(analytics.router, prefix=prefix, tags=["Analytics"])
     app.include_router(tickets.router,   prefix=prefix, tags=["Tickets"])
     app.include_router(knowledge.router, prefix=prefix, tags=["Knowledge Base"])
+    app.include_router(san_software.router, prefix=prefix, tags=["San Software SIP"])
     app.include_router(websocket.router, tags=["WebSocket"])
 
     # ── Health Check ──────────────────────────────────────────────────────────

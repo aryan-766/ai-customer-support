@@ -6,7 +6,7 @@ import structlog
 
 from app.agents.state import CallState
 from app.agents.base_business_agent import run_business_agent, _get_last_user_text
-from app.integrations.nimbuspost import NimbusPost
+from app.integrations.zoho_desk import ZohoDesk
 
 logger = structlog.get_logger(__name__)
 
@@ -14,7 +14,7 @@ SYSTEM_PROMPT = """You are a returns and replacement specialist for Ambrane.
 Help customers with:
 - Return eligibility check (7-day return policy)
 - Replacement eligibility (defective product within warranty)
-- Reverse pickup scheduling via NimbusPost courier network
+- Reverse pickup scheduling by creating a Zoho Desk ticket
 - Replacement order creation
 
 Ambrane Return Policy:
@@ -33,8 +33,8 @@ To process a return/replacement, collect:
 3. Product condition
 4. Pickup address (if different from delivery address)
 
-Once eligibility confirmed, reverse pickup will be scheduled via NimbusPost.
-Customer will receive tracking SMS for the pickup.
+Once eligibility confirmed, a reverse pickup ticket will be logged via Zoho Desk.
+Customer will be contacted by our logistics team for pickup.
 Always check policy using knowledge base before confirming eligibility [citation_id].
 """
 
@@ -59,26 +59,28 @@ async def return_replacement_agent(state: CallState) -> dict:
 
     pickup_context = ""
     if customer_confirming and order_id:
-        nimbus = NimbusPost()
+        zoho = ZohoDesk()
         try:
-            result = await nimbus.create_reverse_pickup(
-                order_id=order_id,
-                reason="Customer return request via support call",
-                pickup_address={},   # Will use registered address
-                product_details={"order_id": order_id},
+            # Create a Zoho Desk ticket for logistics team to handle the return pickup
+            ticket_id = await zoho.create_ticket(
+                subject=f"Reverse Pickup Request - Order {order_id}",
+                description=f"Customer requested reverse pickup via voice support for order {order_id}.",
+                customer_email="customer@example.com", # Placeholder
+                priority="high",
+                department="Logistics",
+                call_id=call_id,
             )
-            if result.get("success"):
+            if ticket_id:
                 pickup_context = (
-                    f"\n[PICKUP SCHEDULED]\n"
-                    f"AWB: {result.get('pickup_awb', 'N/A')}\n"
-                    f"Pickup Date: {result.get('pickup_date', 'Within 24-48 hours')}\n"
-                    f"Courier: {result.get('courier', 'NimbusPost partner')}\n"
-                    f"Customer will receive SMS confirmation."
+                    f"\n[PICKUP REQUEST LOGGED]\n"
+                    f"Ticket ID: {ticket_id}\n"
+                    f"Status: Sent to logistics team.\n"
+                    f"Customer will receive confirmation shortly."
                 )
-                logger.info("reverse_pickup_created", call_id=call_id, order_id=order_id,
-                            awb=result.get("pickup_awb"))
+                logger.info("reverse_pickup_ticket_created", call_id=call_id, order_id=order_id,
+                            ticket_id=ticket_id)
         except Exception as e:
-            logger.error("reverse_pickup_error", error=str(e))
+            logger.error("reverse_pickup_ticket_error", error=str(e))
 
     # Inject pickup info if available
     if pickup_context:

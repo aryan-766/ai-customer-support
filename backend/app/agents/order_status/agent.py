@@ -4,7 +4,7 @@ import structlog
 
 from app.agents.state import CallState
 from app.agents.base_business_agent import run_business_agent, _get_last_user_text
-from app.integrations.nimbuspost import NimbusPost
+from app.integrations.shopify_client import ShopifyClient
 
 logger = structlog.get_logger(__name__)
 
@@ -18,7 +18,7 @@ Help customers with:
 - NDR (Non-Delivery Report) — when courier couldn't deliver
 
 To check order: ask for order ID or tracking number.
-Tracking is done via NimbusPost (courier aggregator) and individual courier partner APIs.
+Tracking is done via Shopify integration.
 If order is delayed beyond expected date, offer to escalate to logistics team.
 If RTO detected (order returning to warehouse), proactively inform customer and offer re-order or refund.
 If NDR found, explain the delivery failure reason and next steps.
@@ -43,25 +43,24 @@ async def order_status_agent(state: CallState) -> dict:
     tracking_context = ""
 
     if order_id or tracking_id:
-        nimbus = NimbusPost()
+        shopify = ShopifyClient()
         try:
-            if tracking_id:
-                data = await nimbus.track_shipment(tracking_id)
-            else:
-                data = await nimbus.get_order_status(order_id)
+            # We'll prioritize order_id if available, fallback to tracking_id
+            search_val = order_id if order_id else tracking_id
+            data = await shopify.get_order_status(search_val)
 
             tracking_context = _format_tracking_data(data, language)
-            logger.info("nimbuspost_data_fetched", call_id=call_id,
+            logger.info("shopify_data_fetched", call_id=call_id,
                         status=data.get("status"))
         except Exception as e:
-            logger.error("nimbuspost_fetch_error", error=str(e))
+            logger.error("shopify_fetch_error", error=str(e))
             tracking_context = ""
 
     # If we have live tracking data, inject it into messages as context
     if tracking_context:
         from langchain_core.messages import SystemMessage
         extra_context = SystemMessage(
-            content=f"[LIVE TRACKING DATA FROM NIMBUSPOST]\n{tracking_context}"
+            content=f"[LIVE TRACKING DATA FROM SHOPIFY]\n{tracking_context}"
         )
         state_copy = dict(state)
         state_copy["messages"] = list(state.get("messages", [])) + [extra_context]
@@ -100,26 +99,18 @@ def _extract_tracking_id(text: str) -> str | None:
 
 
 def _format_tracking_data(data: dict, language: str) -> str:
-    """Format NimbusPost response into a readable context string for LLM."""
+    """Format Shopify response into a readable context string for LLM."""
     if data.get("status") == "error":
         return ""
 
     lines = [
-        f"Order/Tracking ID: {data.get('tracking_id') or data.get('order_id', 'N/A')}",
-        f"Status: {data.get('status', 'Unknown')}",
-        f"Courier Partner: {data.get('courier', 'Unknown')}",
-        f"Current Location: {data.get('current_location', 'N/A')}",
-        f"Expected Delivery: {data.get('eta') or data.get('expected_delivery', 'N/A')}",
-        f"RTO (Returning): {'YES — Order is returning to warehouse' if data.get('is_rto') else 'No'}",
+        f"Order Name: {data.get('order_name', 'N/A')}",
+        f"Financial Status: {data.get('financial_status', 'Unknown')}",
+        f"Fulfillment Status: {data.get('fulfillment_status', 'Unknown')}",
+        f"Current Shipment Status: {data.get('status', 'Unknown')}",
+        f"Courier Partner: {data.get('tracking_company', 'Unknown')}",
+        f"Tracking Number: {data.get('tracking_number', 'N/A')}",
+        f"Tracking Link: {data.get('tracking_url', 'N/A')}",
     ]
-
-    events = data.get("events", [])
-    if events:
-        lines.append("\nTracking Events:")
-        for evt in events[-3:]:
-            lines.append(f"  - {evt.get('status', '')} @ {evt.get('location', '')} ({evt.get('time', '')})")
-
-    if data.get("rto_reason"):
-        lines.append(f"NDR Reason: {data.get('rto_reason')}")
 
     return "\n".join(lines)
