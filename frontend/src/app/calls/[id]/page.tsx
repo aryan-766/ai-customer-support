@@ -44,7 +44,7 @@ export default function LiveCallView({ params }: { params: Promise<{ id: string 
         if (res.ok) {
           const data = await res.json();
           if (data.transcript) {
-            setMessages(data.transcript.map((t: any) => ({
+            setMessages(data.transcript.map((t: { speaker: string; text: string; timestamp: string }) => ({
               id: Math.random().toString(),
               speaker: t.speaker === "receptionist" ? "ai" : t.speaker === "ai" ? "ai" : "customer",
               text: t.text,
@@ -206,7 +206,7 @@ export default function LiveCallView({ params }: { params: Promise<{ id: string 
                   className="p-4 rounded-xl bg-white/5 border border-white/10 hover:border-blue-500/30 transition-smooth"
                 >
                   <p className="text-sm text-slate-200 leading-relaxed font-medium">
-                    "{sug.suggestion}"
+                    &quot;{sug.suggestion}&quot;
                   </p>
                   
                   {sug.kb_reference && (
