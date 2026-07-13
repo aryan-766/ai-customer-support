@@ -87,6 +87,7 @@ class Call(Base):
     messages:    "list[Message]"      = relationship("Message", back_populates="call")
     agent_logs:  "list[AgentLog]"     = relationship("AgentLog", back_populates="call")
     tool_logs:   "list[ToolLog]"      = relationship("ToolLog", back_populates="call")
+    call_summary:"CallSummary"        = relationship("CallSummary", back_populates="call", uselist=False)
 
 
 class Ticket(Base):
@@ -143,6 +144,19 @@ class AgentLog(Base):
     created_at:  Mapped[datetime]       = mapped_column(DateTime(timezone=True), default=now_utc)
     
     call: "Call" = relationship("Call", back_populates="agent_logs")
+
+
+class CallSummary(Base):
+    __tablename__ = "call_summaries"
+    
+    id:             Mapped[int]            = mapped_column(Integer, primary_key=True, autoincrement=True)
+    call_id:        Mapped[uuid.UUID]      = mapped_column(UUID(as_uuid=True), ForeignKey("calls.id"), index=True, unique=True)
+    summary_text:   Mapped[str]            = mapped_column(Text)
+    customer_intent:Mapped[str | None]     = mapped_column(String(100))
+    resolution:     Mapped[str | None]     = mapped_column(String(100))
+    created_at:     Mapped[datetime]       = mapped_column(DateTime(timezone=True), default=now_utc)
+    
+    call: "Call" = relationship("Call", back_populates="call_summary")
 
 
 class ToolLog(Base):

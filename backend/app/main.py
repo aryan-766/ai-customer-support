@@ -30,30 +30,6 @@ async def lifespan(app: FastAPI):
     await redis_manager.connect()
     logger.info("redis_connected", url=settings.REDIS_URL)
 
-    # Load HuggingFace models (blocking — must finish before serving)
-    registry = ModelRegistry()
-    await registry.initialize()
-    logger.info("models_loaded")
-
-    # Pre-load TTS Provider
-    try:
-        from app.core.tts.factory import TTSFactory
-        tts = TTSFactory.get_provider()
-        logger.info("preloading_tts_model")
-        # Initialize early to trigger model download/loading
-        tts._load_model()
-    except Exception as e:
-        logger.error("tts_preload_failed", error=str(e))
-
-    # Pre-load LLM (Ollama)
-    try:
-        from app.core.llm.factory import LLMFactory
-        llm = LLMFactory.get_provider()
-        logger.info("preloading_llm_model")
-        await llm.generate(prompt="hi")
-    except Exception as e:
-        logger.error("llm_preload_failed", error=str(e))
-
     # Setup Qdrant collection if missing
     from app.core.rag.retriever import setup_qdrant_collection
     await setup_qdrant_collection()
@@ -77,10 +53,10 @@ async def lifespan(app: FastAPI):
 
 def create_app() -> FastAPI:
     app = FastAPI(
-        title="Ambrane AI Voice Support API",
+        title="Ambrane AI Voice Support API (ElevenLabs Tool Server)",
         description=(
-            "Multi-agent AI Voice Customer Support Platform "
-            "for Ambrane Consumer Electronics"
+            "Backend Tool Server for ElevenLabs Conversational AI Agents "
+            "handling Zoho, Shopify, and Qdrant Integrations."
         ),
         version="1.0.0",
         docs_url="/docs",
@@ -104,13 +80,13 @@ def create_app() -> FastAPI:
 
     # ── Routes ────────────────────────────────────────────────────────────────
     prefix = "/api/v1"
+    from app.api.v1 import calls, analytics, tickets, knowledge, eleven_webhook
+    
     app.include_router(calls.router,     prefix=prefix, tags=["Calls"])
-    app.include_router(agents.router,    prefix=prefix, tags=["Agents"])
     app.include_router(analytics.router, prefix=prefix, tags=["Analytics"])
     app.include_router(tickets.router,   prefix=prefix, tags=["Tickets"])
     app.include_router(knowledge.router, prefix=prefix, tags=["Knowledge Base"])
-    app.include_router(san_software.router, prefix=prefix, tags=["San Software SIP"])
-    app.include_router(websocket.router, tags=["WebSocket"])
+    app.include_router(eleven_webhook.router, prefix=prefix, tags=["ElevenLabs Webhook"])
 
     # ── Health Check ──────────────────────────────────────────────────────────
     @app.get("/health", tags=["Health"])
@@ -125,6 +101,18 @@ def create_app() -> FastAPI:
     @app.exception_handler(Exception)
     async def global_exception_handler(request, exc):
         import traceback
+        from fastapi import Request, WebSocket
+        logger.error("global_exception", error=str(exc), exc_info=True)
+        print("GLOBAL EXCEPTION:", exc, flush=True)
+        traceback.print_exc()
+        
+        if isinstance(request, WebSocket):
+            try:
+                await request.close(code=1011)
+            except:
+                pass
+            return
+            
         return __import__("fastapi").responses.JSONResponse(
             status_code=500,
             content={"detail": "Internal Server Error", "traceback": traceback.format_exception(type(exc), exc, exc.__traceback__)}

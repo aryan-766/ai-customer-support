@@ -19,6 +19,8 @@ logger = structlog.get_logger(__name__)
 class StartCallRequest(BaseModel):
     customer_mobile: Optional[str] = None
     channel: str = "phone"
+    sip_call_id: Optional[str] = None     # Asterisk UNIQUEID
+    sip_channel: Optional[str] = None     # Asterisk channel name (e.g. SIP/san-0001)
 
 
 class StartCallResponse(BaseModel):
@@ -50,6 +52,19 @@ async def start_call(body: StartCallRequest, db: AsyncSession = Depends(get_db))
     await db.commit()
 
     call_id_str = str(call_uuid)
+
+    # Redis mein SIP metadata save karo (agar SIP call hai)
+    if body.sip_call_id:
+        await redis_manager.save_call_state(
+            f"sip:{body.sip_call_id}",
+            {"call_id": call_id_str, "sip_call_id": body.sip_call_id}
+        )
+        logger.info(
+            "sip_call_mapped",
+            call_id=call_id_str,
+            sip_call_id=body.sip_call_id,
+        )
+
     logger.info("call_started", call_id=call_id_str, channel=body.channel)
 
     return StartCallResponse(

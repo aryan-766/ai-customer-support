@@ -13,7 +13,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(
-        env_file=".env",
+        env_file=("../.env", ".env"),
         env_file_encoding="utf-8",
         case_sensitive=False,
         extra="ignore",
@@ -26,7 +26,7 @@ class Settings(BaseSettings):
     SECRET_KEY: str = "change_me_in_production"
     LOG_LEVEL: str = "INFO"
     PORT: int = 8000
-    CORS_ORIGINS: List[str] = ["http://localhost:3000", "http://localhost:8000"]
+    CORS_ORIGINS: List[str] = ["http://localhost:3000", "http://localhost:8000", "http://localhost:5000"]
 
     # ── PostgreSQL ─────────────────────────────────────────────────────────────
     POSTGRES_HOST: str = "localhost"
@@ -47,9 +47,16 @@ class Settings(BaseSettings):
     QDRANT_URL: str = "http://localhost:6333"
     QDRANT_COLLECTION: str = "ambrane_kb"
 
-    # ── STT ────────────────────────────────────────────────────────────────────
+    # ── STT ──────────────────────────────────────────────────────────────────────
     STT_PROVIDER: str = "deepgram"
+    # Deepgram
     DEEPGRAM_API_KEY: str = ""
+    DEEPGRAM_MODEL: str = "nova-3"
+    DEEPGRAM_LANGUAGE: str = "en"
+    DEEPGRAM_ENCODING: str = "linear16"
+    DEEPGRAM_SAMPLE_RATE: int = 16000
+    DEEPGRAM_ENDPOINTING: bool = False
+    # Faster Whisper (fallback)
     STT_MODEL_SIZE: str = "base"
     STT_DEVICE: str = "cpu"
     STT_COMPUTE_TYPE: str = "int8"
@@ -62,11 +69,17 @@ class Settings(BaseSettings):
     LLM_MAX_TOKENS: int = 512
     LLM_TIMEOUT: int = 30
 
-    # ── TTS ────────────────────────────────────────────────────────────────────
-    TTS_PROVIDER: str = "elevenlabs"
-    TTS_VOICE: str = "alba" # Forced value
+    # ── TTS ──────────────────────────────────────────────────────────────────────
+    TTS_PROVIDER: str = "edge"
+    TTS_VOICE: str = "en-IN-NeerjaNeural"
+    TTS_SAMPLE_RATE: int = 24000
+    # ElevenLabs (paid, swap in when billing ready)
     ELEVENLABS_API_KEY: str = ""
     ELEVENLABS_VOICE_ID: str = "21m00Tcm4TlvDq8ikWAM"
+    # Edge TTS (FREE - Microsoft Neural)
+    EDGE_TTS_VOICE: str = "en-IN-NeerjaNeural"
+    EDGE_TTS_RATE: str = "+0%"
+    EDGE_TTS_PITCH: str = "+0Hz"
 
     # ── HuggingFace Models ─────────────────────────────────────────────────────
     EMBED_MODEL: str = "BAAI/bge-small-en-v1.5"
@@ -90,6 +103,15 @@ class Settings(BaseSettings):
     ZOHO_DESK_URL: str = "https://desk.zoho.in/api/v1"
 
 
+
+    # ── SIP Bridge (Asterisk / SAN Software) ─────────────────────────────────
+    # sip_bridge.py ka configuration
+    SIP_BRIDGE_HOST: str = "0.0.0.0"          # Bridge listen address
+    SIP_BRIDGE_PORT: int = 5000                # Bridge port (Asterisk AudioSocket yahan connect karta hai)
+    SIP_BRIDGE_CODEC: str = "ulaw"             # Asterisk audio codec: 'ulaw' (μ-law) ya 'alaw'
+    ASTERISK_HOST: str = "localhost"           # Asterisk server IP
+    BACKEND_WS_URL: str = "ws://localhost:8000" # Backend WS URL (bridge ke liye)
+    BACKEND_API_URL: str = "http://localhost:8000" # Backend REST URL (bridge ke liye)
 
     # ── Shopify (Warranty) ────────────────────────────────────────────────────
     SHOPIFY_SHOP_URL: str = ""
