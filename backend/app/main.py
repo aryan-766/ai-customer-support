@@ -11,8 +11,7 @@ import structlog
 from app.config import settings
 from app.core.database import engine, Base
 from app.core.cache import redis_manager
-from app.core.models_loader import ModelRegistry
-from app.api.v1 import calls, agents, analytics, tickets, knowledge, websocket, san_software
+from app.api.v1 import calls, analytics, tickets, knowledge
 from app.utils.logger import setup_logging
 from prometheus_fastapi_instrumentator import Instrumentator
 
@@ -29,6 +28,12 @@ async def lifespan(app: FastAPI):
     # Connect Redis
     await redis_manager.connect()
     logger.info("redis_connected", url=settings.REDIS_URL)
+
+    # Load Embedder models for Qdrant Retrieval
+    from app.core.models_loader import ModelRegistry
+    registry = ModelRegistry()
+    await registry.initialize()
+    logger.info("embedding_models_loaded")
 
     # Setup Qdrant collection if missing
     from app.core.rag.retriever import setup_qdrant_collection

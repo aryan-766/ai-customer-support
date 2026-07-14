@@ -14,7 +14,14 @@ from qdrant_client.models import (
 
 from app.config import settings
 from app.core.models_loader import ModelRegistry
-from app.agents.state import Citation
+from typing import TypedDict
+
+class Citation(TypedDict):
+    citation_id: str
+    title: str
+    source: str
+    snippet: str
+    relevance_score: float
 
 logger = structlog.get_logger(__name__)
 
