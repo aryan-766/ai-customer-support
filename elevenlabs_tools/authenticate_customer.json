@@ -1,0 +1,45 @@
+{
+  "type": "webhook",
+  "name": "authenticate_customer",
+  "description": "Verify the customer in the Zoho CRM database using their ID. Use this at the start of the call.",
+  "api_schema": {
+    "url": "https://absolute-sulfate-curry.ngrok-free.dev/api/v1/eleven/authenticate_customer",
+    "method": "POST",
+    "path_params_schema": [],
+    "query_params_schema": [],
+    "request_body_schema": {
+      "id": "body",
+      "type": "object",
+      "description": "Request body for authentication",
+      "required": true,
+      "properties": [
+        {
+          "id": "customer_id",
+          "type": "string",
+          "description": "The customer ID or Order ID provided by the user.",
+          "dynamic_variable": "",
+          "constant_value": "",
+          "value_type": "llm_prompt",
+          "required": true,
+          "enum": null
+        }
+      ],
+      "value_type": "llm_prompt"
+    },
+    "request_headers": [],
+    "content_type": "application/json",
+    "auth_connection": null
+  },
+  "response_timeout_secs": 20,
+  "dynamic_variables": {
+    "dynamic_variable_placeholders": {}
+  },
+  "assignments": [],
+  "interruption_mode": "allow",
+  "pre_tool_speech": "auto",
+  "tool_call_sound": null,
+  "tool_call_sound_behavior": "auto",
+  "execution_mode": "immediate",
+  "tool_error_handling_mode": "auto",
+  "response_mocks": []
+}

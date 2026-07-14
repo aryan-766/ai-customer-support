@@ -1,0 +1,45 @@
+{
+  "type": "webhook",
+  "name": "check_order_status",
+  "description": "Check the delivery tracking status of a customer's order. Use this when a customer asks where their order is.",
+  "api_schema": {
+    "url": "https://absolute-sulfate-curry.ngrok-free.dev/api/v1/eleven/check_order_status",
+    "method": "POST",
+    "path_params_schema": [],
+    "query_params_schema": [],
+    "request_body_schema": {
+      "id": "body",
+      "type": "object",
+      "description": "Request body for checking order status",
+      "required": true,
+      "properties": [
+        {
+          "id": "order_id",
+          "type": "string",
+          "description": "The order ID provided by the customer (e.g., AMB-12345).",
+          "dynamic_variable": "",
+          "constant_value": "",
+          "value_type": "llm_prompt",
+          "required": true,
+          "enum": null
+        }
+      ],
+      "value_type": "llm_prompt"
+    },
+    "request_headers": [],
+    "content_type": "application/json",
+    "auth_connection": null
+  },
+  "response_timeout_secs": 20,
+  "dynamic_variables": {
+    "dynamic_variable_placeholders": {}
+  },
+  "assignments": [],
+  "interruption_mode": "allow",
+  "pre_tool_speech": "auto",
+  "tool_call_sound": null,
+  "tool_call_sound_behavior": "auto",
+  "execution_mode": "immediate",
+  "tool_error_handling_mode": "auto",
+  "response_mocks": []
+}

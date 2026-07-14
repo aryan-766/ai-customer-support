@@ -1,0 +1,65 @@
+{
+  "type": "webhook",
+  "name": "update_ticket",
+  "description": "Update or close an existing ticket in Zoho Desk. Use this to mark a ticket as Closed when an issue is resolved.",
+  "api_schema": {
+    "url": "https://absolute-sulfate-curry.ngrok-free.dev/api/v1/eleven/update_ticket",
+    "method": "POST",
+    "path_params_schema": [],
+    "query_params_schema": [],
+    "request_body_schema": {
+      "id": "body",
+      "type": "object",
+      "description": "Request body for updating a ticket",
+      "required": true,
+      "properties": [
+        {
+          "id": "ticket_id",
+          "type": "string",
+          "description": "The ID of the ticket to update.",
+          "dynamic_variable": "",
+          "constant_value": "",
+          "value_type": "llm_prompt",
+          "required": true,
+          "enum": null
+        },
+        {
+          "id": "description",
+          "type": "string",
+          "description": "The updated description or resolution summary.",
+          "dynamic_variable": "",
+          "constant_value": "",
+          "value_type": "llm_prompt",
+          "required": true,
+          "enum": null
+        },
+        {
+          "id": "status",
+          "type": "string",
+          "description": "The new status of the ticket (e.g., 'Open', 'Closed').",
+          "dynamic_variable": "",
+          "constant_value": "",
+          "value_type": "llm_prompt",
+          "required": true,
+          "enum": null
+        }
+      ],
+      "value_type": "llm_prompt"
+    },
+    "request_headers": [],
+    "content_type": "application/json",
+    "auth_connection": null
+  },
+  "response_timeout_secs": 20,
+  "dynamic_variables": {
+    "dynamic_variable_placeholders": {}
+  },
+  "assignments": [],
+  "interruption_mode": "allow",
+  "pre_tool_speech": "auto",
+  "tool_call_sound": null,
+  "tool_call_sound_behavior": "auto",
+  "execution_mode": "immediate",
+  "tool_error_handling_mode": "auto",
+  "response_mocks": []
+}

@@ -47,39 +47,9 @@ class Settings(BaseSettings):
     QDRANT_URL: str = "http://localhost:6333"
     QDRANT_COLLECTION: str = "ambrane_kb"
 
-    # ── STT ──────────────────────────────────────────────────────────────────────
-    STT_PROVIDER: str = "deepgram"
-    # Deepgram
-    DEEPGRAM_API_KEY: str = ""
-    DEEPGRAM_MODEL: str = "nova-3"
-    DEEPGRAM_LANGUAGE: str = "en"
-    DEEPGRAM_ENCODING: str = "linear16"
-    DEEPGRAM_SAMPLE_RATE: int = 16000
-    DEEPGRAM_ENDPOINTING: bool = False
-    # Faster Whisper (fallback)
-    STT_MODEL_SIZE: str = "base"
-    STT_DEVICE: str = "cpu"
-    STT_COMPUTE_TYPE: str = "int8"
-
-    # ── LLM ────────────────────────────────────────────────────────────────────
-    LLM_PROVIDER: str = "ollama"
-    LLM_MODEL: str = "qwen2.5:3b-instruct-q4_K_M"
-    LLM_BASE_URL: str = "http://localhost:11434"
-    LLM_TEMPERATURE: float = 0.3
-    LLM_MAX_TOKENS: int = 512
-    LLM_TIMEOUT: int = 30
-
-    # ── TTS ──────────────────────────────────────────────────────────────────────
-    TTS_PROVIDER: str = "edge"
-    TTS_VOICE: str = "en-IN-NeerjaNeural"
-    TTS_SAMPLE_RATE: int = 24000
-    # ElevenLabs (paid, swap in when billing ready)
+    # ── ElevenLabs ───────────────────────────────────────────────────────────────
     ELEVENLABS_API_KEY: str = ""
     ELEVENLABS_VOICE_ID: str = "21m00Tcm4TlvDq8ikWAM"
-    # Edge TTS (FREE - Microsoft Neural)
-    EDGE_TTS_VOICE: str = "en-IN-NeerjaNeural"
-    EDGE_TTS_RATE: str = "+0%"
-    EDGE_TTS_PITCH: str = "+0Hz"
 
     # ── HuggingFace Models ─────────────────────────────────────────────────────
     EMBED_MODEL: str = "BAAI/bge-small-en-v1.5"
@@ -118,10 +88,6 @@ class Settings(BaseSettings):
     SHOPIFY_ACCESS_TOKEN: str = ""
 
 
-
-    # ── Notifications ─────────────────────────────────────────────────────────
-    MSG91_AUTH_KEY: str = ""
-    MSG91_SENDER_ID: str = "AMBRNE"
 
     @field_validator("CORS_ORIGINS", mode="before")
     @classmethod

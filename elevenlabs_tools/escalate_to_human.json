@@ -1,0 +1,55 @@
+{
+  "type": "webhook",
+  "name": "escalate_to_human",
+  "description": "Transfer the call to a live human agent. Use this for complaints or if the customer demands a human.",
+  "api_schema": {
+    "url": "https://absolute-sulfate-curry.ngrok-free.dev/api/v1/eleven/escalate_to_human",
+    "method": "POST",
+    "path_params_schema": [],
+    "query_params_schema": [],
+    "request_body_schema": {
+      "id": "body",
+      "type": "object",
+      "description": "Request body for escalating to human",
+      "required": true,
+      "properties": [
+        {
+          "id": "call_id",
+          "type": "string",
+          "description": "Pass a random string like 'eleven_call'",
+          "dynamic_variable": "",
+          "constant_value": "",
+          "value_type": "llm_prompt",
+          "required": true,
+          "enum": null
+        },
+        {
+          "id": "reason",
+          "type": "string",
+          "description": "The reason why the customer wants a human.",
+          "dynamic_variable": "",
+          "constant_value": "",
+          "value_type": "llm_prompt",
+          "required": true,
+          "enum": null
+        }
+      ],
+      "value_type": "llm_prompt"
+    },
+    "request_headers": [],
+    "content_type": "application/json",
+    "auth_connection": null
+  },
+  "response_timeout_secs": 20,
+  "dynamic_variables": {
+    "dynamic_variable_placeholders": {}
+  },
+  "assignments": [],
+  "interruption_mode": "allow",
+  "pre_tool_speech": "auto",
+  "tool_call_sound": null,
+  "tool_call_sound_behavior": "auto",
+  "execution_mode": "immediate",
+  "tool_error_handling_mode": "auto",
+  "response_mocks": []
+}

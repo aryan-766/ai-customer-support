@@ -29,7 +29,7 @@ class ModelRegistry:
             cls._instance.sentiment_analyzer = None
             cls._instance.intent_classifier = None
             cls._instance.lang_detector = None
-            cls._instance.whisper = None
+            cls._instance.lang_detector = None
         return cls._instance
 
     async def initialize(self):
@@ -49,19 +49,7 @@ class ModelRegistry:
         """Blocking model loading — runs in thread pool."""
         from sentence_transformers import SentenceTransformer, CrossEncoder
         from transformers import pipeline
-        from faster_whisper import WhisperModel
-
         cache_dir = settings.MODELS_CACHE_DIR
-
-        # 1. Whisper STT
-        logger.info("loading_whisper", model=settings.STT_MODEL_SIZE)
-        self.whisper = WhisperModel(
-            settings.STT_MODEL_SIZE,
-            device=settings.STT_DEVICE,
-            compute_type=settings.STT_COMPUTE_TYPE,
-            download_root=f"{cache_dir}/whisper",
-        )
-        logger.info("whisper_loaded")
 
         # 2. BGE Embedder (for RAG)
         logger.info("loading_embedder", model=settings.EMBED_MODEL)

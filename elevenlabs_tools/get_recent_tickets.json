@@ -1,0 +1,45 @@
+{
+  "type": "webhook",
+  "name": "get_recent_tickets",
+  "description": "Fetch recent support tickets for a customer from Zoho Desk.",
+  "api_schema": {
+    "url": "https://absolute-sulfate-curry.ngrok-free.dev/api/v1/eleven/get_recent_tickets",
+    "method": "POST",
+    "path_params_schema": [],
+    "query_params_schema": [],
+    "request_body_schema": {
+      "id": "body",
+      "type": "object",
+      "description": "Request body for fetching recent tickets",
+      "required": true,
+      "properties": [
+        {
+          "id": "contact_id",
+          "type": "string",
+          "description": "The customer's contact ID in Zoho Desk.",
+          "dynamic_variable": "",
+          "constant_value": "",
+          "value_type": "llm_prompt",
+          "required": true,
+          "enum": null
+        }
+      ],
+      "value_type": "llm_prompt"
+    },
+    "request_headers": [],
+    "content_type": "application/json",
+    "auth_connection": null
+  },
+  "response_timeout_secs": 20,
+  "dynamic_variables": {
+    "dynamic_variable_placeholders": {}
+  },
+  "assignments": [],
+  "interruption_mode": "allow",
+  "pre_tool_speech": "auto",
+  "tool_call_sound": null,
+  "tool_call_sound_behavior": "auto",
+  "execution_mode": "immediate",
+  "tool_error_handling_mode": "auto",
+  "response_mocks": []
+}
