@@ -31,6 +31,7 @@ class EscalateRequest(BaseModel):
 
 class AuthenticateRequest(BaseModel):
     customer_id: str
+    ticket_id: str | None = None
 
 class CreateTicketRequest(BaseModel):
     subject: str
@@ -95,10 +96,10 @@ async def escalate_to_human(payload: EscalateRequest):
 
 @router.post("/eleven/authenticate_customer")
 async def authenticate_customer(payload: AuthenticateRequest):
-    """Verifies customer in Zoho CRM."""
+    """Verifies customer in Zoho CRM and manages tickets."""
     try:
         zoho = ZohoDesk()
-        return {
+        response_data = {
             "status": "success", 
             "is_authenticated": True, 
             "customer_details": {
@@ -106,6 +107,38 @@ async def authenticate_customer(payload: AuthenticateRequest):
                 "vip_status": False
             }
         }
+        
+        if payload.ticket_id:
+            # Check existing ticket status
+            contact_res = await zoho.search_contact(payload.customer_id)
+            if contact_res:
+                recent = await zoho.get_recent_tickets(contact_res['id'])
+                for t in recent:
+                    if t.get('ticketNumber') == payload.ticket_id:
+                        response_data['ticket_status'] = t.get('status')
+                        response_data['ticket_subject'] = t.get('subject')
+                        response_data['message'] = f"Found ticket {payload.ticket_id} with status {t.get('status')}."
+                        break
+                if 'ticket_status' not in response_data:
+                    response_data['message'] = f"Ticket {payload.ticket_id} not found in recent tickets."
+            else:
+                 response_data['message'] = "Customer contact not found in Zoho for ticket lookup."
+        else:
+            # Create a new ticket immediately
+            new_ticket_id = await zoho.create_ticket(
+                subject="New Phone Support Inquiry",
+                description=f"Incoming call from {payload.customer_id}",
+                customer_email=f"{payload.customer_id}@example.com",
+                priority="medium",
+                department="Customer Support"
+            )
+            if new_ticket_id:
+                response_data['new_ticket_id'] = new_ticket_id
+                response_data['message'] = f"Created new ticket with ID {new_ticket_id}."
+            else:
+                response_data['message'] = "Failed to create new ticket."
+                
+        return response_data
     except Exception as e:
         logger.error("auth_error", error=str(e))
         return {"status": "error", "message": str(e)}

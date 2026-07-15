@@ -1,7 +1,7 @@
 {
   "type": "webhook",
   "name": "authenticate_customer",
-  "description": "Verify the customer in the Zoho CRM database using their ID. Use this at the start of the call.",
+  "description": "Verify customer via email/phone. If customer provides a ticket number, pass it in ticket_id to get its status. If no ticket number is passed, a NEW ticket is automatically created.",
   "api_schema": {
     "url": "https://absolute-sulfate-curry.ngrok-free.dev/api/v1/eleven/authenticate_customer",
     "method": "POST",
@@ -16,11 +16,21 @@
         {
           "id": "customer_id",
           "type": "string",
-          "description": "The customer ID or Order ID provided by the user.",
+          "description": "The customer ID, email, or phone provided by the user.",
           "dynamic_variable": "",
           "constant_value": "",
           "value_type": "llm_prompt",
           "required": true,
+          "enum": null
+        },
+        {
+          "id": "ticket_id",
+          "type": "string",
+          "description": "Optional. The ticket number provided by the customer.",
+          "dynamic_variable": "",
+          "constant_value": "",
+          "value_type": "llm_prompt",
+          "required": false,
           "enum": null
         }
       ],
