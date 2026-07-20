@@ -16,11 +16,11 @@
         {
           "id": "customer_id",
           "type": "string",
-          "description": "The customer ID, email, or phone provided by the user.",
+          "description": "The customer ID, email, or phone provided by the user. Required ONLY if ticket_id is not provided.",
           "dynamic_variable": "",
           "constant_value": "",
           "value_type": "llm_prompt",
-          "required": true,
+          "required": false,
           "enum": null
         },
         {

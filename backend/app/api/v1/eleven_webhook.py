@@ -30,7 +30,7 @@ class EscalateRequest(BaseModel):
     reason: str = "Customer requested human agent."
 
 class AuthenticateRequest(BaseModel):
-    customer_id: str
+    customer_id: str | None = None
     ticket_id: str | None = None
 
 class CreateTicketRequest(BaseModel):
@@ -103,40 +103,38 @@ async def authenticate_customer(payload: AuthenticateRequest):
             "status": "success", 
             "is_authenticated": True, 
             "customer_details": {
-                "name": f"Customer_{payload.customer_id}",
+                "name": f"Customer_{payload.customer_id or 'Unknown'}",
                 "vip_status": False
             }
         }
         
         if payload.ticket_id:
-            # Check existing ticket status
-            contact_res = await zoho.search_contact(payload.customer_id)
-            if contact_res:
-                recent = await zoho.get_recent_tickets(contact_res['id'])
-                for t in recent:
-                    if t.get('ticketNumber') == payload.ticket_id:
-                        response_data['ticket_status'] = t.get('status')
-                        response_data['ticket_subject'] = t.get('subject')
-                        response_data['message'] = f"Found ticket {payload.ticket_id} with status {t.get('status')}."
-                        break
-                if 'ticket_status' not in response_data:
-                    response_data['message'] = f"Ticket {payload.ticket_id} not found in recent tickets."
+            # Check ticket directly by its number
+            ticket = await zoho.get_ticket_by_number(payload.ticket_id)
+            if ticket:
+                response_data['ticket_status'] = ticket.get('status')
+                response_data['ticket_subject'] = ticket.get('subject')
+                response_data['ticket_description'] = ticket.get('description')
+                response_data['message'] = "Ticket details retrieved successfully."
             else:
-                 response_data['message'] = "Customer contact not found in Zoho for ticket lookup."
+                response_data['message'] = "Ticket not found."
         else:
-            # Create a new ticket immediately
-            new_ticket_id = await zoho.create_ticket(
-                subject="New Phone Support Inquiry",
-                description=f"Incoming call from {payload.customer_id}",
-                customer_email=f"{payload.customer_id}@example.com",
-                priority="medium",
-                department="Customer Support"
-            )
-            if new_ticket_id:
-                response_data['new_ticket_id'] = new_ticket_id
-                response_data['message'] = f"Created new ticket with ID {new_ticket_id}."
+            # No ticket ID provided, customer wants to create a new ticket
+            if not payload.customer_id:
+                response_data['message'] = "Phone number or email is required to create a new ticket."
             else:
-                response_data['message'] = "Failed to create new ticket."
+                new_ticket_id = await zoho.create_ticket(
+                    subject="New Phone Support Inquiry",
+                    description=f"Incoming call from {payload.customer_id}",
+                    customer_email=f"{payload.customer_id}@example.com" if "@" not in payload.customer_id else payload.customer_id,
+                    priority="medium",
+                    department="Customer Support"
+                )
+                if new_ticket_id:
+                    response_data['new_ticket_id'] = new_ticket_id
+                    response_data['message'] = f"Created new ticket with ID {new_ticket_id}."
+                else:
+                    response_data['message'] = "Failed to create new ticket."
                 
         return response_data
     except Exception as e:
