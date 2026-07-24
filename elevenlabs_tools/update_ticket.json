@@ -1,7 +1,7 @@
 {
   "type": "webhook",
   "name": "update_ticket",
-  "description": "Update or close an existing ticket in Zoho Desk. Use this to mark a ticket as Closed when an issue is resolved.",
+  "description": "Update an existing Zoho Desk ticket with the customer's issue description. Call this AFTER the customer has explained their problem. The ticket_id must come from either create_ticket response (ticket_id field) or from authenticate_customer response (ticket_details.zoho_id field).",
   "api_schema": {
     "url": "https://absolute-sulfate-curry.ngrok-free.dev/api/v1/eleven/update_ticket",
     "method": "POST",
@@ -16,7 +16,7 @@
         {
           "id": "ticket_id",
           "type": "string",
-          "description": "The ID of the ticket to update.",
+          "description": "The Zoho internal ticket ID. Get this from create_ticket.ticket_id OR from authenticate_customer.ticket_details.zoho_id.",
           "dynamic_variable": "",
           "constant_value": "",
           "value_type": "llm_prompt",
@@ -24,9 +24,9 @@
           "enum": null
         },
         {
-          "id": "description",
+          "id": "query_description",
           "type": "string",
-          "description": "The updated description or resolution summary.",
+          "description": "Customer's full issue description to be saved in the ticket. Include product name, issue details, and any relevant info the customer mentioned.",
           "dynamic_variable": "",
           "constant_value": "",
           "value_type": "llm_prompt",
@@ -36,11 +36,11 @@
         {
           "id": "status",
           "type": "string",
-          "description": "The new status of the ticket (e.g., 'Open', 'Closed').",
+          "description": "Ticket status. Use Open for active issues, Closed if resolved on the call.",
           "dynamic_variable": "",
           "constant_value": "",
           "value_type": "llm_prompt",
-          "required": true,
+          "required": false,
           "enum": null
         }
       ],

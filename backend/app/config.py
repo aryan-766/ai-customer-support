@@ -83,9 +83,9 @@ class Settings(BaseSettings):
     BACKEND_WS_URL: str = "ws://localhost:8000" # Backend WS URL (bridge ke liye)
     BACKEND_API_URL: str = "http://localhost:8000" # Backend REST URL (bridge ke liye)
 
-    # ── Shopify (Warranty) ────────────────────────────────────────────────────
-    SHOPIFY_SHOP_URL: str = ""
-    SHOPIFY_ACCESS_TOKEN: str = ""
+    # ── Nimbus Post (Tracking & Warranty) ─────────────────────────────────────
+    NIMBUS_POST_EMAIL: str = ""
+    NIMBUS_POST_PASSWORD: str = ""
 
 
 

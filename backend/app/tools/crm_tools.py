@@ -1,11 +1,11 @@
-﻿"""
+"""
 FastMCP server for CRM and Support tools.
 """
 
 from fastmcp import FastMCP
 from typing import Optional, Dict, Any
 from app.integrations.zoho_desk import ZohoDesk
-from app.integrations.shopify_client import ShopifyClient
+from app.integrations.nimbus_post_client import NimbusPostClient
 from app.core.rag.retriever import rag
 
 # Create the MCP server for CRM operations
@@ -54,26 +54,20 @@ async def zoho_update_ticket_tool(ticket_id: str, description: str, status: str 
         return f"Ticket {ticket_id} updated successfully."
     return f"Failed to update ticket {ticket_id}."
 
-# --- Shopify API Tools ---
+# --- Nimbus Post API Tools ---
 
 @crm_mcp.tool()
-async def shopify_order_status_tool(customer_phone: str) -> str:
-    """Check the status of a customer's recent orders using Shopify API."""
-    shopify = ShopifyClient()
-    orders = await shopify.get_customer_orders(customer_phone)
-    if orders:
-        latest = orders[0]
-        return (f"Found order {latest.get('name')}. "
-                f"Financial status: {latest.get('financial_status')}. "
-                f"Fulfillment status: {latest.get('fulfillment_status')}.")
-    return "No recent orders found."
-
-@crm_mcp.tool()
-async def shopify_tracking_tool(order_name: str) -> Dict[str, Any]:
-    """Get tracking and shipping information for a specific Shopify order."""
-    shopify = ShopifyClient()
-    status = await shopify.get_order_status(order_name)
+async def nimbus_tracking_tool(order_id_or_awb: str) -> Dict[str, Any]:
+    """Get tracking and shipping information for a specific order or AWB via Nimbus Post."""
+    nimbus = NimbusPostClient()
+    status = await nimbus.get_order_status(order_id_or_awb)
     return status
+
+@crm_mcp.tool()
+async def nimbus_warranty_check_tool(phone_number: str) -> Dict[str, Any]:
+    """Check warranty status based on shipping history via Nimbus Post."""
+    nimbus = NimbusPostClient()
+    return await nimbus.check_warranty_status(phone_number)
 
 # --- RAG & Logic Tools ---
 

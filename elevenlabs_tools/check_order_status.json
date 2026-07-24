@@ -1,7 +1,7 @@
 {
   "type": "webhook",
   "name": "check_order_status",
-  "description": "Check the delivery tracking status of a customer's order. Use this when a customer asks where their order is.",
+  "description": "Check the delivery tracking status of a customer's order. Use this when a customer provides an Order ID or AWB number.",
   "api_schema": {
     "url": "https://absolute-sulfate-curry.ngrok-free.dev/api/v1/eleven/check_order_status",
     "method": "POST",

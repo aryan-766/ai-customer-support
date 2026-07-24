@@ -95,12 +95,11 @@ async def get_call(call_id: str, db: AsyncSession = Depends(get_db)):
         "started_at": call.started_at.isoformat() if call.started_at else None,
         "ended_at": call.ended_at.isoformat() if call.ended_at else None,
         "routing_path": call.routing_path or [],
-        "zoho_ticket_id": call.zoho_ticket_id,
     }
 
 
 @router.get("/{call_id}/transcript")
-async def get_transcript(call_id: str):
+async def get_transcript(call_id: str, db: AsyncSession = Depends(get_db)):
     """Get full transcript from Redis (live) or PostgreSQL (archived)."""
     # Try Redis first (live call)
     transcript = await redis_manager.get_transcript(call_id)
@@ -108,11 +107,12 @@ async def get_transcript(call_id: str):
         return {"call_id": call_id, "source": "live", "transcript": transcript}
 
     # Fall back to DB
-    async with get_db() as db:
-        result = await db.execute(select(Call).where(Call.id == call_id))
-        call = result.scalar_one_or_none()
-        if call:
-            return {"call_id": call_id, "source": "archived", "transcript": call.transcript or []}
+    result = await db.execute(select(Call).where(Call.id == call_id))
+    call = result.scalar_one_or_none()
+    if call:
+        from app.models import Transcript
+        t_res = await db.execute(select(Transcript).where(Transcript.call_id == call_id).order_by(Transcript.created_at))
+        return {"call_id": call_id, "source": "archived", "transcript": [{"role": t.role, "text": t.text} for t in t_res.scalars().all()]}
 
     raise HTTPException(status_code=404, detail="Call not found")
 

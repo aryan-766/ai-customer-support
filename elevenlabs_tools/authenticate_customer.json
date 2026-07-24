@@ -1,7 +1,7 @@
 {
   "type": "webhook",
   "name": "authenticate_customer",
-  "description": "Verify customer via email/phone. If customer provides a ticket number, pass it in ticket_id to get its status. If no ticket number is passed, a NEW ticket is automatically created.",
+  "description": "Verify customer using their ticket number OR order ID. Call this at the START of every conversation. If ticket_id is provided, fetch ticket details from Zoho. If order_id is provided, fetch order status. If nothing is found, the agent should call create_ticket to make a new ticket.",
   "api_schema": {
     "url": "https://absolute-sulfate-curry.ngrok-free.dev/api/v1/eleven/authenticate_customer",
     "method": "POST",
@@ -10,13 +10,13 @@
     "request_body_schema": {
       "id": "body",
       "type": "object",
-      "description": "Request body for authentication",
+      "description": "Request body for customer authentication",
       "required": true,
       "properties": [
         {
-          "id": "customer_id",
+          "id": "ticket_id",
           "type": "string",
-          "description": "The customer ID, email, or phone provided by the user. Required ONLY if ticket_id is not provided.",
+          "description": "Customer's Zoho support ticket number (e.g. 83097). Use when customer says they have a ticket number.",
           "dynamic_variable": "",
           "constant_value": "",
           "value_type": "llm_prompt",
@@ -24,9 +24,9 @@
           "enum": null
         },
         {
-          "id": "ticket_id",
+          "id": "order_id",
           "type": "string",
-          "description": "Optional. The ticket number provided by the customer.",
+          "description": "Customer's order ID or AWB tracking number from courier. Use when customer provides an order number.",
           "dynamic_variable": "",
           "constant_value": "",
           "value_type": "llm_prompt",
@@ -40,7 +40,7 @@
     "content_type": "application/json",
     "auth_connection": null
   },
-  "response_timeout_secs": 20,
+  "response_timeout_secs": 25,
   "dynamic_variables": {
     "dynamic_variable_placeholders": {}
   },

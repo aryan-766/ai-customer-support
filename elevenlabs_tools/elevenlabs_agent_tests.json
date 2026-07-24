@@ -1,0 +1,86 @@
+[
+  {
+    "name": "Ticket Authentication Test",
+    "conversation_transcript": [
+      {
+        "role": "user",
+        "message": "My ticket number is 89556"
+      }
+    ],
+    "expected_tool_calls": [
+      {
+        "tool_name": "authenticate_customer",
+        "parameters": {
+          "ticket_id": "89556"
+        }
+      }
+    ]
+  },
+  {
+    "name": "AWB Tracking Authentication Test",
+    "conversation_transcript": [
+      {
+        "role": "user",
+        "message": "Can you check my tracking number 23645497361713?"
+      }
+    ],
+    "expected_tool_calls": [
+      {
+        "tool_name": "authenticate_customer",
+        "parameters": {
+          "order_id": "23645497361713"
+        }
+      }
+    ]
+  },
+  {
+    "name": "New Ticket Creation Flow",
+    "conversation_transcript": [
+      {
+        "role": "user",
+        "message": "I don't have a ticket number or order ID. My powerbank is swollen."
+      }
+    ],
+    "expected_tool_calls": [
+      {
+        "tool_name": "create_ticket",
+        "parameters": {
+          "subject": "Powerbank swollen issue",
+          "description": "Customer has no ticket ID and reported swollen powerbank."
+        }
+      }
+    ]
+  },
+  {
+    "name": "Order Status Inquiry Test",
+    "conversation_transcript": [
+      {
+        "role": "user",
+        "message": "Where is my package? AWB is 23645497361713"
+      }
+    ],
+    "expected_tool_calls": [
+      {
+        "tool_name": "check_order_status",
+        "parameters": {
+          "order_id": "23645497361713"
+        }
+      }
+    ]
+  },
+  {
+    "name": "Human Agent Escalation Test",
+    "conversation_transcript": [
+      {
+        "role": "user",
+        "message": "I am very frustrated. Transfer me to a real human support agent immediately."
+      }
+    ],
+    "expected_tool_calls": [
+      {
+        "tool_name": "escalate_to_human",
+        "parameters": {}
+      }
+    ]
+  }
+]

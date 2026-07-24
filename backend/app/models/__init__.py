@@ -26,9 +26,9 @@ class Customer(Base):
     created_at: Mapped[datetime]  = mapped_column(DateTime(timezone=True), default=now_utc)
     updated_at: Mapped[datetime]  = mapped_column(DateTime(timezone=True), default=now_utc, onupdate=now_utc)
 
-    calls:   "list[Call]"   = relationship("Call",   back_populates="customer")
-    tickets: "list[Ticket]" = relationship("Ticket", back_populates="customer")
-    orders:  "list[Order]"  = relationship("Order",  back_populates="customer")
+    calls:   Mapped["list[Call]"]   = relationship("Call",   back_populates="customer")
+    tickets: Mapped["list[Ticket]"] = relationship("Ticket", back_populates="customer")
+    orders:  Mapped["list[Order]"]  = relationship("Order",  back_populates="customer")
 
 
 class Order(Base):
@@ -42,7 +42,7 @@ class Order(Base):
     created_at:     Mapped[datetime]       = mapped_column(DateTime(timezone=True), default=now_utc)
     updated_at:     Mapped[datetime]       = mapped_column(DateTime(timezone=True), default=now_utc, onupdate=now_utc)
     
-    customer: "Customer" = relationship("Customer", back_populates="orders")
+    customer: Mapped["Customer"] = relationship("Customer", back_populates="orders")
 
 
 class Call(Base):
@@ -81,13 +81,13 @@ class Call(Base):
     
     created_at:        Mapped[datetime]     = mapped_column(DateTime(timezone=True), default=now_utc)
 
-    customer:    "Customer"           = relationship("Customer", back_populates="calls")
-    tickets:     "list[Ticket]"       = relationship("Ticket", back_populates="call")
-    transcripts: "list[Transcript]"   = relationship("Transcript", back_populates="call")
-    messages:    "list[Message]"      = relationship("Message", back_populates="call")
-    agent_logs:  "list[AgentLog]"     = relationship("AgentLog", back_populates="call")
-    tool_logs:   "list[ToolLog]"      = relationship("ToolLog", back_populates="call")
-    call_summary:"CallSummary"        = relationship("CallSummary", back_populates="call", uselist=False)
+    customer:    Mapped["Customer"]           = relationship("Customer", back_populates="calls")
+    tickets:     Mapped["list[Ticket]"]       = relationship("Ticket", back_populates="call")
+    transcripts: Mapped["list[Transcript]"]   = relationship("Transcript", back_populates="call")
+    messages:    Mapped["list[Message]"]      = relationship("Message", back_populates="call")
+    agent_logs:  Mapped["list[AgentLog]"]     = relationship("AgentLog", back_populates="call")
+    tool_logs:   Mapped["list[ToolLog]"]      = relationship("ToolLog", back_populates="call")
+    call_summary:Mapped["CallSummary"]        = relationship("CallSummary", back_populates="call", uselist=False)
 
 
 class Ticket(Base):
@@ -104,8 +104,8 @@ class Ticket(Base):
     created_at:     Mapped[datetime]       = mapped_column(DateTime(timezone=True), default=now_utc)
     updated_at:     Mapped[datetime]       = mapped_column(DateTime(timezone=True), default=now_utc, onupdate=now_utc)
 
-    call:     "Call"     = relationship("Call",     back_populates="tickets")
-    customer: "Customer" = relationship("Customer", back_populates="tickets")
+    call:     Mapped["Call"]     = relationship("Call",     back_populates="tickets")
+    customer: Mapped["Customer"] = relationship("Customer", back_populates="tickets")
 
 
 class Transcript(Base):
@@ -117,7 +117,7 @@ class Transcript(Base):
     text:        Mapped[str]            = mapped_column(Text)
     created_at:  Mapped[datetime]       = mapped_column(DateTime(timezone=True), default=now_utc)
     
-    call: "Call" = relationship("Call", back_populates="transcripts")
+    call: Mapped["Call"] = relationship("Call", back_populates="transcripts")
 
 
 class Message(Base):
@@ -130,7 +130,7 @@ class Message(Base):
     content:     Mapped[dict]           = mapped_column(JSON) # Store raw BaseMessage dict
     created_at:  Mapped[datetime]       = mapped_column(DateTime(timezone=True), default=now_utc)
     
-    call: "Call" = relationship("Call", back_populates="messages")
+    call: Mapped["Call"] = relationship("Call", back_populates="messages")
 
 
 class AgentLog(Base):
@@ -143,7 +143,7 @@ class AgentLog(Base):
     latency_ms:  Mapped[int | None]     = mapped_column(Integer)
     created_at:  Mapped[datetime]       = mapped_column(DateTime(timezone=True), default=now_utc)
     
-    call: "Call" = relationship("Call", back_populates="agent_logs")
+    call: Mapped["Call"] = relationship("Call", back_populates="agent_logs")
 
 
 class CallSummary(Base):
@@ -156,7 +156,7 @@ class CallSummary(Base):
     resolution:     Mapped[str | None]     = mapped_column(String(100))
     created_at:     Mapped[datetime]       = mapped_column(DateTime(timezone=True), default=now_utc)
     
-    call: "Call" = relationship("Call", back_populates="call_summary")
+    call: Mapped["Call"] = relationship("Call", back_populates="call_summary")
 
 
 class ToolLog(Base):
@@ -171,7 +171,7 @@ class ToolLog(Base):
     latency_ms:  Mapped[int | None]     = mapped_column(Integer)
     created_at:  Mapped[datetime]       = mapped_column(DateTime(timezone=True), default=now_utc)
     
-    call: "Call" = relationship("Call", back_populates="tool_logs")
+    call: Mapped["Call"] = relationship("Call", back_populates="tool_logs")
 
 
 class KBDocument(Base):

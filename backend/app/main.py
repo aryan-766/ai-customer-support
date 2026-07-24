@@ -61,7 +61,7 @@ def create_app() -> FastAPI:
         title="Ambrane AI Voice Support API (ElevenLabs Tool Server)",
         description=(
             "Backend Tool Server for ElevenLabs Conversational AI Agents "
-            "handling Zoho, Shopify, and Qdrant Integrations."
+            "handling Zoho, Nimbus Post, and Qdrant Integrations."
         ),
         version="1.0.0",
         docs_url="/docs",
